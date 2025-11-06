@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleccionar Tópicos - Conversaciones con Sentido</title>
+    <style>
+        /* ESTILOS CONSISTENTES CON EL INDEX */
+        body {
+            background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 15px;
+            min-height: 100vh;
+            color: white;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* HEADER RESPONSIVE */
+        .header {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        @media (min-width: 768px) {
+            .header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .titulo-sala h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        @media (min-width: 768px) {
+            .titulo-sala h1 {
+                font-size: 32px;
+                text-align: left;
+            }
+        }
+
+        .info-sala {
+            text-align: center;
+        }
+
+        @media (min-width: 768px) {
+            .info-sala {
+                text-align: right;
+            }
+        }
+
+        .codigo-sala {
+            background: rgba(39, 174, 96, 0.9);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .rol-usuario {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        /* TÓPICOS RESPONSIVE */
+        .topicos-container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        @media (min-width: 768px) {
+            .topicos-container {
+                padding: 40px;
+            }
+        }
+
+        .instrucciones {
+            font-size: 20px;
+            margin-bottom: 30px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        @media (min-width: 768px) {
+            .instrucciones {
+                font-size: 28px;
+                margin-bottom: 50px;
+            }
+        }
+
+        /* GRID RESPONSIVE - 1 columna en móvil, 2 en tablet, 3 en desktop */
+        .grid-topicos {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        @media (min-width: 600px) {
+            .grid-topicos {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .grid-topicos {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 25px;
+            }
+        }
+
+        .topico-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        @media (min-width: 768px) {
+            .topico-card {
+                padding: 35px 25px;
+                min-height: 220px;
+            }
+        }
+
+        .topico-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .topico-card.seleccionado {
+            background: rgba(155, 89, 182, 0.3);
+            border-color: #9b59b6;
+            transform: translateY(-2px);
+            min-height: 220px;
+        }
+
+        @media (min-width: 768px) {
+            .topico-card.seleccionado {
+                min-height: 260px;
+            }
+        }
+
+        .topico-icono {
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+
+        @media (min-width: 768px) {
+            .topico-icono {
+                font-size: 42px;
+                margin-bottom: 20px;
+            }
+        }
+
+        .topico-titulo {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        @media (min-width: 768px) {
+            .topico-titulo {
+                font-size: 24px;
+                margin-bottom: 15px;
+            }
+        }
+
+        .topico-descripcion {
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        @media (min-width: 768px) {
+            .topico-descripcion {
+                font-size: 16px;
+            }
+        }
+
+        /* BOTONES DENTRO DE LA CAJA */
+        .botones-topico {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .topico-card.seleccionado .botones-topico {
+            display: flex;
+        }
+
+        .btn-crear-codigo {
+            background: #27AE60;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-crear-codigo:hover {
+            background: #219653;
+            transform: translateY(-2px);
+        }
+
+        .btn-entrar-sala {
+            background: #D0342C;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-entrar-sala:hover {
+            background: #B52A23;
+            transform: translateY(-2px);
+        }
+
+        .btn-entrar-sala:disabled {
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.5);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* CÓDIGO GENERADO */
+        .codigo-generado {
+            display: none;
+            background: rgba(39, 174, 96, 0.9);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .codigo-generado {
+                font-size: 18px;
+                padding: 15px;
+            }
+        }
+
+        .btn-copiar {
+            background: white;
+            color: #27AE60;
+            border: none;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .btn-copiar:hover {
+            background: #f8f9fa;
+            transform: translateY(-1px);
+        }
+
+        /* BOTÓN VOLVER */
+        .botones-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn-volver {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 12px 25px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn-volver:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="titulo-sala">
+                <h1>Conversaciones con Sentido</h1>
+                <div id="nombreReunion" style="font-size: 16px; margin-top: 5px;">Elige un tópico para comenzar</div>
+            </div>
+            <div class="info-sala">
+                <div class="codigo-sala" id="codigoSala" style="display: none;"></div>
+                <div class="rol-usuario">Facilitador</div>
+            </div>
+        </div>
+
+        <!-- SELECCIÓN DE TÓPICOS -->
+        <div class="topicos-container">
+            <div class="instrucciones">
+                Selecciona un tópico para tu conversación
+            </div>
+            
+            <div class="grid-topicos">
+                <!-- Espiritualidad -->
+                <div class="topico-card" onclick="seleccionarTopico('espiritualidad')">
+                    <div class="topico-icono">🕊️</div>
+                    <div class="topico-titulo">Espiritualidad</div>
+                    <div class="topico-descripcion">Reflexiones sobre fe, espiritualidad y creencias personales</div>
+                    
+                    <!-- BOTONES QUE APARECEN AL SELECCIONAR -->
+                    <div class="botones-topico" id="botones-espiritualidad">
+                        <button class="btn-crear-codigo" onclick="crearCodigo('espiritualidad')">Crear Código</button>
+                        <button class="btn-entrar-sala" onclick="entrarSala('espiritualidad')" id="btn-entrar-espiritualidad" disabled>Entrar a la Sala</button>
+                        <div class="codigo-generado" id="codigo-espiritualidad"></div>
+                    </div>
+                </div>
+
+                <!-- Familia -->
+                <div class="topico-card" onclick="seleccionarTopico('familia')">
+                    <div class="topico-icono">👨‍👩‍👧‍👦</div>
+                    <div class="topico-titulo">Familia</div>
+                    <div class="topico-descripcion">Vínculos familiares, tradiciones y relaciones cercanas</div>
+                    
+                    <div class="botones-topico" id="botones-familia">
+                        <button class="btn-crear-codigo" onclick="crearCodigo('familia')">Crear Código</button>
+                        <button class="btn-entrar-sala" onclick="entrarSala('familia')" id="btn-entrar-familia" disabled>Entrar a la Sala</button>
+                        <div class="codigo-generado" id="codigo-familia"></div>
+                    </div>
+                </div>
+
+                <!-- Pareja -->
+                <div class="topico-card" onclick="seleccionarTopico('pareja')">
+                    <div class="topico-icono">💑</div>
+                    <div class="topico-titulo">Pareja</div>
+                    <div class="topico-descripcion">Amor, relaciones de pareja y comunicación emocional</div>
+                    
+                    <div class="botones-topico" id="botones-pareja">
+                        <button class="btn-crear-codigo" onclick="crearCodigo('pareja')">Crear Código</button>
+                        <button class="btn-entrar-sala" onclick="entrarSala('pareja')" id="btn-entrar-pareja" disabled>Entrar a la Sala</button>
+                        <div class="codigo-generado" id="codigo-pareja"></div>
+                    </div>
+                </div>
+
+                <!-- Padre/Hijos -->
+                <div class="topico-card" onclick="seleccionarTopico('padre_hijos')">
+                    <div class="topico-icono">👨‍👦</div>
+                    <div class="topico-titulo">Padre/Hijos</div>
+                    <div class="topico-descripcion">Paternidad, crianza y relaciones intergeneracionales</div>
+                    
+                    <div class="botones-topico" id="botones-padre_hijos">
+                        <button class="btn-crear-codigo" onclick="crearCodigo('padre_hijos')">Crear Código</button>
+                        <button class="btn-entrar-sala" onclick="entrarSala('padre_hijos')" id="btn-entrar-padre_hijos" disabled>Entrar a la Sala</button>
+                        <div class="codigo-generado" id="codigo-padre_hijos"></div>
+                    </div>
+                </div>
+
+                <!-- Colegio -->
+                <div class="topico-card" onclick="seleccionarTopico('colegio')">
+                    <div class="topico-icono">🎓</div>
+                    <div class="topico-titulo">Colegio</div>
+                    <div class="topico-descripcion">Educación, aprendizaje y experiencias escolares</div>
+                    
+                    <div class="botones-topico" id="botones-colegio">
+                        <button class="btn-crear-codigo" onclick="crearCodigo('colegio')">Crear Código</button>
+                        <button class="btn-entrar-sala" onclick="entrarSala('colegio')" id="btn-entrar-colegio" disabled>Entrar a la Sala</button>
+                        <div class="codigo-generado" id="codigo-colegio"></div>
+                    </div>
+                </div>
+
+                <!-- Desarrollo Personal -->
+                <div class="topico-card" onclick="seleccionarTopico('desarrollo_personal')">
+                    <div class="topico-icono">🌱</div>
+                    <div class="topico-titulo">Desarrollo Personal</div>
+                    <div class="topico-descripcion">Crecimiento, metas y superación personal</div>
+                    
+                    <div class="botones-topico" id="botones-desarrollo_personal">
+                        <button class="btn-crear-codigo" onclick="crearCodigo('desarrollo_personal')">Crear Código</button>
+                        <button class="btn-entrar-sala" onclick="entrarSala('desarrollo_personal')" id="btn-entrar-desarrollo_personal" disabled>Entrar a la Sala</button>
+                        <div class="codigo-generado" id="codigo-desarrollo_personal"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="botones-container">
+                <button class="btn-volver" onclick="volverAlInicio()">← Volver al Inicio</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let topicoActual = '';
+        let codigoGenerado = '';
+
+        // INICIALIZACIÓN
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nombreReunion = urlParams.get('nombre') || 'Mi Reunión';
+            document.getElementById('nombreReunion').textContent = `Reunión: ${nombreReunion}`;
+        });
+
+        // SELECCIONAR TÓPICO
+        function seleccionarTopico(topico) {
+            // Deseleccionar todos los tópicos
+            document.querySelectorAll('.topico-card').forEach(card => {
+                card.classList.remove('seleccionado');
+            });
+            
+            // Seleccionar el tópico clickeado
+            const card = event.currentTarget;
+            card.classList.add('seleccionado');
+            topicoActual = topico;
+        }
+
+        // CREAR CÓDIGO PARA UN TÓPICO
+        function crearCodigo(topico) {
+            event.stopPropagation(); // Evitar que se propague el clic al card
+            
+            // Generar código único
+            codigoGenerado = generarCodigo();
+            
+            // Mostrar código en el card correspondiente
+            const codigoElement = document.getElementById(`codigo-${topico}`);
+            codigoElement.innerHTML = `
+                <div>${codigoGenerado}</div>
+                <button class="btn-copiar" onclick="copiarCodigo('${topico}')">📋 Copiar</button>
+            `;
+            codigoElement.style.display = 'block';
+            
+            // Habilitar botón "Entrar a la Sala"
+            document.getElementById(`btn-entrar-${topico}`).disabled = false;
+            
+            // Mostrar código en el header también
+            document.getElementById('codigoSala').textContent = codigoGenerado;
+            document.getElementById('codigoSala').style.display = 'block';
+        }
+
+        function generarCodigo() {
+            const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let codigo = '';
+            for (let i = 0; i < 6; i++) {
+                codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+            }
+            return codigo;
+        }
+
+        function copiarCodigo(topico) {
+            event.stopPropagation();
+            navigator.clipboard.writeText(codigoGenerado).then(() => {
+                alert('¡Código copiado al portapapeles!');
+            });
+        }
+
+        function entrarSala(topico) {
+            event.stopPropagation();
+            
+            if (!codigoGenerado) {
+                alert('Primero debes crear un código para la reunión');
+                return;
+            }
+
+            // Redirigir a la sala de conversación
+            const urlParams = new URLSearchParams(window.location.search);
+            const nombreReunion = urlParams.get('nombre') || 'Mi Reunión';
+            
+            window.location.href = `sala.html?codigo=${codigoGenerado}&topico=${topico}&nombre=${encodeURIComponent(nombreReunion)}&creador=true`;
+        }
+
+        function volverAlInicio() {
+            if (confirm('¿Volver al inicio? Se perderá la selección de tópicos.')) {
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+</html>
