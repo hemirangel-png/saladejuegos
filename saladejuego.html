@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversaciones con Sentido</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        body {
+            background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            color: white;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* HEADER MINI */
+        .header {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px;
+            border-radius: 10px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+        }
+
+        .codigo-sala {
+            background: rgba(39, 174, 96, 0.9);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        /* TARJETA DE PREGUNTA PRINCIPAL */
+        .pregunta-container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .topico-titulo {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+        }
+
+        .pregunta-texto {
+            font-size: 22px;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        /* LISTA HORIZONTAL DE PARTICIPANTES */
+        .participantes-container {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .participantes-lista {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .participante {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .participante.activo {
+            background: #27ae60;
+            color: white;
+            font-weight: 600;
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.5);
+        }
+
+        /* TURNO ACTUAL */
+        .turno-actual {
+            background: rgba(155, 89, 182, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .participante-actual {
+            font-size: 18px;
+            font-weight: 700;
+            color: #9b59b6;
+            margin-top: 5px;
+        }
+
+        /* BOTÓN SIGUIENTE */
+        .btn-siguiente {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        /* ANIMACIÓN */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulsando {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER MINI -->
+        <div class="header">
+            <div style="font-size: 18px; font-weight: 600;">Conversaciones</div>
+            <div class="codigo-sala" id="codigoSala">ABC123</div>
+        </div>
+
+        <!-- TURNO ACTUAL -->
+        <div class="turno-actual">
+            <div>🎤 Turno de:</div>
+            <div class="participante-actual" id="participanteActual">Ana</div>
+        </div>
+
+        <!-- TARJETA DE PREGUNTA PRINCIPAL -->
+        <div class="pregunta-container">
+            <div class="topico-titulo" id="topicoTitulo">FAMILIA</div>
+            <div class="pregunta-texto" id="preguntaTexto">
+                ¿Cuál es tu recuerdo más valioso con tu familia?
+            </div>
+        </div>
+
+        <!-- LISTA HORIZONTAL DE PARTICIPANTES -->
+        <div class="participantes-container">
+            <div style="font-size: 14px; margin-bottom: 10px; text-align: center; color: rgba(255,255,255,0.8);">
+                Participantes
+            </div>
+            <div class="participantes-lista" id="listaParticipantes">
+                <!-- Los participantes se cargan dinámicamente -->
+            </div>
+        </div>
+
+        <!-- BOTÓN SIGUIENTE -->
+        <button class="btn-siguiente" onclick="siguienteTurno()">
+            Siguiente Turno
+        </button>
+    </div>
+
+    <script>
+        // DATOS CON MÁS PARTICIPANTES (para demostrar grupos grandes)
+        let participantes = [
+            { id: 1, nombre: 'Ana' },
+            { id: 2, nombre: 'Carlos' },
+            { id: 3, nombre: 'María' },
+            { id: 4, nombre: 'José' },
+            { id: 5, nombre: 'Laura' },
+            { id: 6, nombre: 'David' },
+            { id: 7, nombre: 'Sofía' },
+            { id: 8, nombre: 'Miguel' },
+            { id: 9, nombre: 'Elena' },
+            { id: 10, nombre: 'Pablo' },
+            { id: 11, nombre: 'Isabel' },
+            { id: 12, nombre: 'Ricardo' }
+        ];
+        let turnoActual = 1;
+
+        // INICIALIZACIÓN
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const codigo = urlParams.get('codigo');
+            const topico = urlParams.get('topico');
+
+            document.getElementById('codigoSala').textContent = codigo;
+            document.getElementById('topicoTitulo').textContent = topico ? topico.toUpperCase() : 'FAMILIA';
+            
+            cargarPregunta(topico);
+            cargarParticipantes();
+            actualizarInterfaz();
+        });
+
+        // CARGAR LISTA DE PARTICIPANTES
+        function cargarParticipantes() {
+            const lista = document.getElementById('listaParticipantes');
+            lista.innerHTML = '';
+            
+            participantes.forEach(participante => {
+                const span = document.createElement('span');
+                span.className = 'participante';
+                span.textContent = participante.nombre;
+                span.id = `participante-${participante.id}`;
+                lista.appendChild(span);
+            });
+        }
+
+        // CARGAR PREGUNTA ALEATORIA
+        function cargarPregunta(topico) {
+            const preguntas = {
+                'familia': [
+                    "¿Cuál es tu recuerdo más valioso con tu familia?",
+                    "¿Qué tradición familiar te gusta más?",
+                    "¿Qué aprendiste de tus padres?",
+                    "¿Qué significa 'hogar' para ti?"
+                ],
+                'espiritualidad': [
+                    "¿Qué te da paz interior?",
+                    "¿Cómo encuentras significado en la vida?",
+                    "¿Qué creencias te guían?",
+                    "¿Qué te conecta con algo mayor?"
+                ],
+                'pareja': [
+                    "¿Qué valoras más en una relación?",
+                    "¿Cómo construyes confianza?",
+                    "¿Qué has aprendido del amor?",
+                    "¿Qué hace especial una relación?"
+                ],
+                'padre_hijos': [
+                    "¿Qué te gusta de ser padre/hijo?",
+                    "¿Qué valor quieres transmitir?",
+                    "¿Cómo es tu relación familiar?",
+                    "¿Qué consejo darías sobre familia?"
+                ],
+                'colegio': [
+                    "¿Qué maestro recuerdas con cariño?",
+                    "¿Qué aprendiste en la escuela que usas hoy?",
+                    "¿Qué experiencia escolar fue importante?",
+                    "¿Qué recuerdo escolar te hace feliz?"
+                ],
+                'desarrollo_personal': [
+                    "¿Qué meta te emociona?",
+                    "¿Qué hábito mejoró tu vida?",
+                    "¿Qué te gustaría aprender?",
+                    "¿Cómo superas desafíos?"
+                ]
+            };
+
+            const preguntasTopico = preguntas[topico] || preguntas.familia;
+            const pregunta = preguntasTopico[Math.floor(Math.random() * preguntasTopico.length)];
+            document.getElementById('preguntaTexto').textContent = pregunta;
+        }
+
+        // SIGUIENTE TURNO
+        function siguienteTurno() {
+            // Encontrar siguiente participante
+            const indiceActual = participantes.findIndex(p => p.id === turnoActual);
+            const siguienteIndice = (indiceActual + 1) % participantes.length;
+            
+            turnoActual = participantes[siguienteIndice].id;
+            actualizarInterfaz();
+
+            // Si es el primero, cambiar pregunta
+            if (siguienteIndice === 0) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const topico = urlParams.get('topico');
+                cargarPregunta(topico);
+            }
+        }
+
+        // ACTUALIZAR INTERFAZ
+        function actualizarInterfaz() {
+            const participanteActualElem = document.getElementById('participanteActual');
+            
+            // Quitar clase activa de todos
+            document.querySelectorAll('.participante').forEach(p => {
+                p.classList.remove('activo');
+            });
+            
+            // Agregar clase activa al participante actual
+            const participanteActual = document.getElementById(`participante-${turnoActual}`);
+            if (participanteActual) {
+                participanteActual.classList.add('activo');
+                participanteActual.classList.add('pulsando');
+            }
+
+            // Actualizar turno actual
+            const participante = participantes.find(p => p.id === turnoActual);
+            participanteActualElem.textContent = participante.nombre;
+            participanteActualElem.classList.add('pulsando');
+        }
+
+        // INICIAR CON EL PRIMER PARTICIPANTE
+        setTimeout(() => {
+            actualizarInterfaz();
+        }, 100);
+    </script>
+</body>
+</html>
