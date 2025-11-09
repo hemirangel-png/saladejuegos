@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversaciones con Sentido - El Juego</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        body {
+            background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .titulo-bienvenida {
+            font-size: 20px;
+            font-weight: 400;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        .titulo-principal {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitulo {
+            font-size: 24px;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+
+        /* GRID DE TÓPICOS */
+        .topicos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .topico-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .topico-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .topico-card.seleccionado {
+            background: rgba(155, 89, 182, 0.25);
+            border-color: #9b59b6;
+            min-height: auto;
+            cursor: default;
+        }
+
+        .topico-card.seleccionado:hover {
+            transform: none;
+        }
+
+        .topico-contenido {
+            transition: all 0.3s ease;
+        }
+
+        .topico-card.seleccionado .topico-contenido {
+            opacity: 0.7;
+            transform: scale(0.95);
+        }
+
+        .topico-icono {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .topico-titulo {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .topico-descripcion {
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        /* OPCIONES DENTRO DE LA TARJETA */
+        .opciones-accion {
+            display: none;
+            margin-top: 20px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .topico-card.seleccionado .opciones-accion {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-accion {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-crear {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-crear:hover {
+            background: #219653;
+            transform: translateY(-2px);
+        }
+
+        .btn-unirse {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-unirse:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        /* FORMULARIO DENTRO DE LA TARJETA */
+        .formulario-accion {
+            display: none;
+            margin-top: 15px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .topico-card.seleccionado .formulario-accion.mostrar {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-label {
+            display: block;
+            text-align: left;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #9b59b6;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.3);
+        }
+
+        .btn-continuar {
+            background: #D0342C;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .btn-continuar:hover {
+            background: #B52A23;
+            transform: translateY(-2px);
+        }
+
+        /* CÓDIGO GENERADO */
+        .codigo-generado {
+            background: rgba(39, 174, 96, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+            text-align: center;
+        }
+
+        .codigo-generado.mostrar {
+            display: block;
+        }
+
+        .codigo-texto {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .btn-copiar {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-copiar:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* BOTÓN VOLVER */
+        .btn-volver {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .btn-volver:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* BOTÓN IR AL INICIO */
+        .btn-inicio {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 12px 25px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: block;
+            margin: 20px auto 0;
+            text-align: center;
+        }
+
+        .btn-inicio:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="titulo-bienvenida">Bienvenid@s a</div>
+            <div class="titulo-principal">Conversaciones con Sentido</div>
+            <div class="subtitulo">El Juego</div>
+        </div>
+
+        <!-- GRID DE TÓPICOS -->
+        <div class="topicos-grid">
+            <!-- Espiritualidad -->
+            <div class="topico-card" data-topico="espiritualidad">
+                <div class="topico-contenido">
+                    <div class="topico-icono">🕊️</div>
+                    <div class="topico-titulo">Espiritualidad</div>
+                    <div class="topico-descripcion">Reflexiones sobre fe, espiritualidad y creencias personales</div>
+                </div>
+                
+                <div class="opciones-accion">
+                    <button class="btn-accion btn-crear" onclick="mostrarFormularioCrear('espiritualidad')">
+                        Crear Reunión
+                    </button>
+                    <button class="btn-accion btn-unirse" onclick="mostrarFormularioUnirse('espiritualidad')">
+                        Unirse a Reunión
+                    </button>
+                </div>
+
+                <!-- FORMULARIO CREAR -->
+                <div class="formulario-accion" id="form-crear-espiritualidad">
+                    <div class="input-group">
+                        <label class="input-label">Tu nombre como facilitador:</label>
+                        <input type="text" class="input-field" placeholder="Ej: María" maxlength="20">
+                    </div>
+                    <button class="btn-continuar" onclick="crearReunion('espiritualidad')">
+                        Crear Reunión y Generar Código
+                    </button>
+                    <div class="codigo-generado" id="codigo-espiritualidad">
+                        <div class="codigo-texto" id="codigo-texto-espiritualidad"></div>
+                        <button class="btn-copiar" onclick="copiarCodigo('espiritualidad')">📋 Copiar Código</button>
+                    </div>
+                    <button class="btn-volver" onclick="volverAOpciones('espiritualidad')">← Volver</button>
+                </div>
+
+                <!-- FORMULARIO UNIRSE -->
+                <div class="formulario-accion" id="form-unirse-espiritualidad">
+                    <div class="input-group">
+                        <label class="input-label">Código de la reunión:</label>
+                        <input type="text" class="input-field" placeholder="Ej: ABC123" maxlength="6" style="text-transform: uppercase">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Tu nombre:</label>
+                        <input type="text" class="input-field" placeholder="Ej: Carlos" maxlength="20">
+                    </div>
+                    <button class="btn-continuar" onclick="unirseReunion('espiritualidad')">
+                        Unirse a la Conversación
+                    </button>
+                    <button class="btn-volver" onclick="volverAOpciones('espiritualidad')">← Volver</button>
+                </div>
+            </div>
+
+            <!-- Familia -->
+            <div class="topico-card" data-topico="familia">
+                <div class="topico-contenido">
+                    <div class="topico-icono">👨‍👩‍👧‍👦</div>
+                    <div class="topico-titulo">Familia</div>
+                    <div class="topico-descripcion">Vínculos familiares, tradiciones y relaciones cercanas</div>
+                </div>
+                
+                <div class="opciones-accion">
+                    <button class="btn-accion btn-crear" onclick="mostrarFormularioCrear('familia')">
+                        Crear Reunión
+                    </button>
+                    <button class="btn-accion btn-unirse" onclick="mostrarFormularioUnirse('familia')">
+                        Unirse a Reunión
+                    </button>
+                </div>
+
+                <!-- FORMULARIO CREAR -->
+                <div class="formulario-accion" id="form-crear-familia">
+                    <div class="input-group">
+                        <label class="input-label">Tu nombre como facilitador:</label>
+                        <input type="text" class="input-field" placeholder="Ej: María" maxlength="20">
+                    </div>
+                    <button class="btn-continuar" onclick="crearReunion('familia')">
+                        Crear Reunión y Generar Código
+                    </button>
+                    <div class="codigo-generado" id="codigo-familia">
+                        <div class="codigo-texto" id="codigo-texto-familia"></div>
+                        <button class="btn-copiar" onclick="copiarCodigo('familia')">📋 Copiar Código</button>
+                    </div>
+                    <button class="btn-volver" onclick="volverAOpciones('familia')">← Volver</button>
+                </div>
+
+                <!-- FORMULARIO UNIRSE -->
+                <div class="formulario-accion" id="form-unirse-familia">
+                    <div class="input-group">
+                        <label class="input-label">Código de la reunión:</label>
+                        <input type="text" class="input-field" placeholder="Ej: ABC123" maxlength="6" style="text-transform: uppercase">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Tu nombre:</label>
+                        <input type="text" class="input-field" placeholder="Ej: Carlos" maxlength="20">
+                    </div>
+                    <button class="btn-continuar" onclick="unirseReunion('familia')">
+                        Unirse a la Conversación
+                    </button>
+                    <button class="btn-volver" onclick="volverAOpciones('familia')">← Volver</button>
+                </div>
+            </div>
+
+            <!-- Pareja -->
+            <div class="topico-card" data-topico="pareja">
+                <div class="topico-contenido">
+                    <div class="topico-icono">💑</div>
+                    <div class="topico-titulo">Pareja</div>
+                    <div class="topico-descripcion">Amor, relaciones de pareja y comunicación emocional</div>
+                </div>
+                
+                <div class="opciones-accion">
+                    <button class="btn-accion btn-crear" onclick="mostrarFormularioCrear('pareja')">
+                        Crear Reunión
+                    </button>
+                    <button class="btn-accion btn-unirse" onclick="mostrarFormularioUnirse('pareja')">
+                        Unirse a Reunión
+                    </button>
+                </div>
+
+                <!-- FORMULARIO CREAR -->
+                <div class="formulario-accion" id="form-crear-pareja">
+                    <div class="input-group">
+                        <label class="input-label">Tu nombre como facilitador:</label>
+                        <input type="text" class="input-field" placeholder="Ej: María" maxlength="20">
+                    </div>
+                    <button class="btn-continuar" onclick="crearReunion('pareja')">
+                        Crear Reunión y Generar Código
+                    </button>
+                    <div class="codigo-generado" id="codigo-pareja">
+                        <div class="codigo-texto" id="codigo-texto-pareja"></div>
+                        <button class="btn-copiar" onclick="copiarCodigo('pareja')">📋 Copiar Código</button>
+                    </div>
+                    <button class="btn-volver" onclick="volverAOpciones('pareja')">← Volver</button>
+                </div>
+
+                <!-- FORMULARIO UNIRSE -->
+                <div class="formulario-accion" id="form-unirse-pareja">
+                    <div class="input-group">
+                        <label class="input-label">Código de la reunión:</label>
+                        <input type="text" class="input-field" placeholder="Ej: ABC123" maxlength="6" style="text-transform: uppercase">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Tu nombre:</label>
+                        <input type="text" class="input-field" placeholder="Ej: Carlos" maxlength="20">
+                    </div>
+                    <button class="btn-continuar" onclick="unirseReunion('pareja')">
+                        Unirse a la Conversación
+                    </button>
+                    <button class="btn-volver" onclick="volverAOpciones('pareja')">← Volver</button>
+                </div>
+            </div>
+
+            <!-- Padre/Hijos -->
+            <div class="topico-card" data-topico="padre_hijos">
+                <div class="topico-contenido">
+                    <div class="topico-icono">👨‍👦</div>
+                    <div class="topico-titulo">Padre/Hijos</div>
+                    <div class="topico-descripcion">Paternidad, crianza y relaciones intergeneracionales</div>
+                </div>
+                
+                <div class="opciones-accion">
+                    <button class="btn-accion btn-crear" onclick="mostrarFormularioCrear('padre_hijos')">
+                        Crear Reunión
+                    </button>
+                    <button class="btn-accion btn-unirse" onclick="mostrarFormularioUnirse('padre_hijos')">
+                        Unirse a Reunión
+                    </button>
+                </div>
+
+                <!-- FORMULARIO CREAR -->
+                <div class="formulario-accion" id="form-crear-padre_hijos">
+                    <div class="input-group">
+                        <label class="input-label">Tu nombre como facilitador:</label>
+                        <input type="text" class="input-field" placeholder="Ej: María" maxlength="20">
+                    </div>
+                    <button class="btn-continuar" onclick="crearReunion('padre_hijos')">
+                        Crear Reunión y Generar Código
+                    </button>
+                    <div class="codigo-generado" id="codigo-padre_hijos">
+                        <div class="codigo-texto" id="codigo-texto-padre_hijos"></div>
+                        <button class="btn-copiar" onclick="copiarCodigo('padre_hijos')">📋 Copiar Código</button>
+                    </div>
+                    <button class="btn-volver" onclick="volverAOpciones('padre_hijos')">← Volver</button>
+                </div>
+
+                <!-- FORMULARIO UNIRSE -->
+                <div class="formulario-accion" id="form-unirse-padre_hijos">
+                    <div class="input-group">
+                        <label class="input-label">Código de la reunión:</label>
+                        <input type="text" class="input-field" placeholder="Ej: ABC123" maxlength="6" style="text-transform: uppercase">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Tu nombre:</label>
+                        <input type="text" class="input-field" placeholder="Ej: Carlos" maxlength="20">
+                    </div>
+                    <button class="btn-continuar" onclick="unirseReunion('padre_hijos')">
+                        Unirse a la Conversación
+                    </button>
+                    <button class="btn-volver" onclick="volverAOpciones('padre_hijos')">← Volver</button>
+                </div>
+            </div>
+
+            <!-- Colegio -->
+            <div class="topico-card" data-topico="colegio">
+                <div class="topico-contenido">
+                    <div class="topico-icono">🎓</div>
+                    <div class="topico-titulo">Colegio</div>
+                    <div class="topico-descripcion">Educación, aprendizaje y experiencias escolares</div>
+                </div>
+                
+                <div class="opciones-accion">
+                    <button class="btn-accion btn-crear" onclick="mostrarFormularioCrear('colegio')">
+                        Crear Reunión
+                    </button>
+                    <button class="btn-accion btn-unirse" onclick="mostrarFormularioUnirse('colegio')">
+                        Unirse a Reunión
+                    </button>
+                </div>
+
+                <!-- FORMULARIO CREAR -->
+                <div class="formulario-accion" id="form-crear-colegio">
+                    <div class="input-group">
+                        <label class="input-label">Tu nombre como facilitador:</label>
+                        <input type="text" class="input-field" placeholder="Ej: María" maxlength="20">
+                    </div>
+                    <button class="btn-continuar" onclick="crearReunion('colegio')">
+                        Crear Reunión y Generar Código
+                    </button>
+                    <div class="codigo-generado" id="codigo-colegio">
+                        <div class="codigo-texto" id="codigo-texto-colegio"></div>
+                        <button class="btn-copiar" onclick="copiarCodigo('colegio')">📋 Copiar Código</button>
+                    </div>
+                    <button class="btn-volver" onclick="volverAOpciones('colegio')">← Volver</button>
+                </div>
+
+                <!-- FORMULARIO UNIRSE -->
+                <div class="formulario-accion" id="form-unirse-colegio">
+                    <div class="input-group">
+                        <label class="input-label">Código de la reunión:</label>
+                        <input type="text" class="input-field" placeholder="Ej: ABC123" maxlength="6" style="text-transform: uppercase">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Tu nombre:</label>
+                        <input type="text" class="input-field" placeholder="Ej: Carlos" maxlength="20">
+                    </div>
+                    <button class="btn-continuar" onclick="unirseReunion('colegio')">
+                        Unirse a la Conversación
+                    </button>
+                    <button class="btn-volver" onclick="volverAOpciones('colegio')">← Volver</button>
+                </div>
+            </div>
+
+            <!-- Desarrollo Personal -->
+            <div class="topico-card" data-topico="desarrollo_personal">
+                <div class="topico-contenido">
+                    <div class="topico-icono">🌱</div>
+                    <div class="topico-titulo">Desarrollo Personal</div>
+                    <div class="topico-descripcion">Crecimiento, metas y superación personal</div>
+                </div>
+                
+                <div class="opciones-accion">
+                    <button class="btn-accion btn-crear" onclick="mostrarFormularioCrear('desarrollo_personal')">
+                        Crear Reunión
+                    </button>
+                    <button class="btn-accion btn-unirse" onclick="mostrarFormularioUnirse('desarrollo_personal')">
+                        Unirse a Reunión
+                    </button>
+                </div>
+
+                <!-- FORMULARIO CREAR -->
+                <div class="formulario-accion" id="form-crear-desarrollo_personal">
+                    <div class="input-group">
+                        <label class="input-label">Tu nombre como facilitador:</label>
+                        <input type="text" class="input-field" placeholder="Ej: María" maxlength="20">
+                    </div>
+                    <button class="btn-continuar" onclick="crearReunion('desarrollo_personal')">
+                        Crear Reunión y Generar Código
+                    </button>
+                    <div class="codigo-generado" id="codigo-desarrollo_personal">
+                        <div class="codigo-texto" id="codigo-texto-desarrollo_personal"></div>
+                        <button class="btn-copiar" onclick="copiarCodigo('desarrollo_personal')">📋 Copiar Código</button>
+                    </div>
+                    <button class="btn-volver" onclick="volverAOpciones('desarrollo_personal')">← Volver</button>
+                </div>
+
+                <!-- FORMULARIO UNIRSE -->
+                <div class="formulario-accion" id="form-unirse-desarrollo_personal">
+                    <div class="input-group">
+                        <label class="input-label">Código de la reunión:</label>
+                        <input type="text" class="input-field" placeholder="Ej: ABC123" maxlength="6" style="text-transform: uppercase">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Tu nombre:</label>
+                        <input type="text" class="input-field" placeholder="Ej: Carlos" maxlength="20">
+                    </div>
+                    <button class="btn-continuar" onclick="unirseReunion('desarrollo_personal')">
+                        Unirse a la Conversación
+                    </button>
+                    <button class="btn-volver" onclick="volverAOpciones('desarrollo_personal')">← Volver</button>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-inicio" onclick="irAlInicio()">← Volver al Inicio</button>
+    </div>
+
+    <script>
+        let codigosGenerados = {};
+
+        // INICIALIZACIÓN - Agregar event listeners a las tarjetas
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.topico-card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    // Solo seleccionar si no se hizo clic en un botón
+                    if (!e.target.closest('.btn-accion') && !e.target.closest('.btn-continuar') && !e.target.closest('.btn-volver')) {
+                        seleccionarTopico(this.dataset.topico);
+                    }
+                });
+            });
+        });
+
+        // SELECCIONAR TÓPICO
+        function seleccionarTopico(topico) {
+            // Deseleccionar todos los tópicos
+            document.querySelectorAll('.topico-card').forEach(card => {
+                card.classList.remove('seleccionado');
+                // Ocultar todos los formularios
+                card.querySelectorAll('.formulario-accion').forEach(form => {
+                    form.classList.remove('mostrar');
+                });
+            });
+            
+            // Seleccionar el tópico clickeado
+            const card = document.querySelector(`[data-topico="${topico}"]`);
+            card.classList.add('seleccionado');
+            
+            // Hacer scroll suave hacia la tarjeta seleccionada
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // MOSTRAR FORMULARIO CREAR
+        function mostrarFormularioCrear(topico) {
+            const card = document.querySelector(`[data-topico="${topico}"]`);
+            card.querySelectorAll('.formulario-accion').forEach(form => form.classList.remove('mostrar'));
+            card.querySelector(`#form-crear-${topico}`).classList.add('mostrar');
+        }
+
+        // MOSTRAR FORMULARIO UNIRSE
+        function mostrarFormularioUnirse(topico) {
+            const card = document.querySelector(`[data-topico="${topico}"]`);
+            card.querySelectorAll('.formulario-accion').forEach(form => form.classList.remove('mostrar'));
+            card.querySelector(`#form-unirse-${topico}`).classList.add('mostrar');
+        }
+
+        // VOLVER A OPCIONES
+        function volverAOpciones(topico) {
+            const card = document.querySelector(`[data-topico="${topico}"]`);
+            card.querySelectorAll('.formulario-accion').forEach(form => form.classList.remove('mostrar'));
+        }
+
+        // CREAR REUNIÓN
+        function crearReunion(topico) {
+            const card = document.querySelector(`[data-topico="${topico}"]`);
+            const input = card.querySelector(`#form-crear-${topico} .input-field`);
+            const nombreFacilitador = input.value.trim();
+            
+            if (!nombreFacilitador) {
+                alert('Por favor, ingresa tu nombre como facilitador');
+                return;
+            }
+
+            // Generar código único
+            const codigo = generarCodigo();
+            codigosGenerados[topico] = codigo;
+            
+            // Mostrar código generado
+            const codigoTexto = card.querySelector(`#codigo-texto-${topico}`);
+            const codigoContainer = card.querySelector(`#codigo-${topico}`);
+            
+            codigoTexto.textContent = codigo;
+            codigoContainer.classList.add('mostrar');
+            
+            // Guardar en localStorage
+            localStorage.setItem(`sala_${codigo}`, JSON.stringify({
+                topico: topico,
+                facilitador: nombreFacilitador,
+                timestamp: Date.now()
+            }));
+
+            // Cambiar el botón para ir a la sala
+            const btnContinuar = card.querySelector(`#form-crear-${topico} .btn-continuar`);
+            btnContinuar.textContent = 'Ir a la Sala de Conversación';
+            btnContinuar.onclick = function() {
+                window.location.href = `sala.html?codigo=${codigo}&topico=${topico}&participante=${encodeURIComponent(nombreFacilitador)}&creador=true`;
+            };
+        }
+
+        // UNIRSE A REUNIÓN
+        function unirseReunion(topico) {
+            const card = document.querySelector(`[data-topico="${topico}"]`);
+            const inputs = card.querySelectorAll(`#form-unirse-${topico} .input-field`);
+            const codigo = inputs[0].value.trim().toUpperCase();
+            const nombre = inputs[1].value.trim();
+            
+            if (!codigo) {
+                alert('Por favor, ingresa el código de la reunión');
+                return;
+            }
+
+            if (!nombre) {
+                alert('Por favor, ingresa tu nombre');
+                return;
+            }
+
+            if (codigo.length !== 6) {
+                alert('El código debe tener 6 caracteres');
+                return;
+            }
+
+            // Verificar si el código existe
+            const salaData = localStorage.getItem(`sala_${codigo}`);
+            if (!salaData) {
+                alert('Código no encontrado. Verifica el código o pide al facilitador que lo comparta nuevamente.');
+                return;
+            }
+
+            const datosSala = JSON.parse(salaData);
+            
+            // Redirigir a la sala
+            window.location.href = `sala.html?codigo=${codigo}&topico=${datosSala.topico}&participante=${encodeURIComponent(nombre)}&creador=false`;
+        }
+
+        // COPIAR CÓDIGO
+        function copiarCodigo(topico) {
+            const codigo = codigosGenerados[topico];
+            if (codigo) {
+                navigator.clipboard.writeText(codigo).then(() => {
+                    alert('¡Código copiado! Compártelo con los participantes.');
+                });
+            }
+        }
+
+        // GENERAR CÓDIGO
+        function generarCodigo() {
+            const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let codigo = '';
+            for (let i = 0; i < 6; i++) {
+                codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+            }
+            return codigo;
+        }
+
+        // IR AL INICIO
+        function irAlInicio() {
+            if (confirm('¿Volver al inicio? Se perderán las selecciones actuales.')) {
+                window.location.reload();
+            }
+        }
+
+        // AUTO MAYÚSCULAS EN CÓDIGOS
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('input[style*="text-transform: uppercase"]').forEach(input => {
+                input.addEventListener('input', function(e) {
+                    this.value = this.value.toUpperCase();
+                });
+            });
+        });
+
+        // ENTER PARA ENVIAR FORMULARIOS
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.input-field').forEach(input => {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        const form = this.closest('.formulario-accion');
+                        const topico = form.closest('.topico-card').dataset.topico;
+                        
+                        if (form.id.includes('crear')) {
+                            crearReunion(topico);
+                        } else {
+                            unirseReunion(topico);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
