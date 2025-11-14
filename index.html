@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversaciones con Sentido - El Juego</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        body {
+            background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            flex: 1;
+        }
+
+        /* HEADER */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .titulo-bienvenida {
+            font-size: 20px;
+            font-weight: 400;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        .titulo-principal {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitulo {
+            font-size: 24px;
+            font-weight: 300;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        /* SECCIÓN CÓDIGO EXISTENTE */
+        .seccion-codigo {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .titulo-codigo {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-codigo {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .input-codigo {
+            padding: 15px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+            text-align: center;
+            width: 200px;
+            text-transform: uppercase;
+        }
+
+        .input-codigo:focus {
+            outline: none;
+            border-color: #3498db;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+        }
+
+        .input-nombre {
+            padding: 15px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+            text-align: center;
+            width: 200px;
+        }
+
+        .input-nombre:focus {
+            outline: none;
+            border-color: #3498db;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-unirse {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-unirse:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        /* GRID DE TÓPICOS */
+        .topicos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .topico-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .topico-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .topico-card.seleccionado {
+            background: rgba(155, 89, 182, 0.25);
+            border-color: #9b59b6;
+            min-height: auto;
+            cursor: default;
+        }
+
+        .topico-card.seleccionado:hover {
+            transform: none;
+        }
+
+        .topico-icono {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .topico-titulo {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .topico-descripcion {
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+
+        /* BOTÓN CREAR REUNIÓN */
+        .btn-crear {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-crear:hover {
+            background: #219653;
+            transform: translateY(-2px);
+        }
+
+        /* FORMULARIO CREAR REUNIÓN */
+        .formulario-crear {
+            display: none;
+            margin-top: 15px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .topico-card.seleccionado .formulario-crear {
+            display: block;
+        }
+
+        .input-crear {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .input-crear:focus {
+            outline: none;
+            border-color: #9b59b6;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.3);
+        }
+
+        .btn-continuar {
+            background: #D0342C;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-continuar:hover {
+            background: #B52A23;
+            transform: translateY(-2px);
+        }
+
+        /* CÓDIGO GENERADO */
+        .codigo-generado {
+            background: rgba(39, 174, 96, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+            text-align: center;
+        }
+
+        .codigo-generado.mostrar {
+            display: block;
+        }
+
+        .codigo-texto {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .btn-copiar {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        .btn-copiar:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-ir-sala {
+            background: #D0342C;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-ir-sala:hover {
+            background: #B52A23;
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* BOTÓN VOLVER */
+        .btn-volver {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .btn-volver:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* PIE DE PÁGINA - SOLO TEXTO BLANCO */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+        }
+
+        .website-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 16px;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+
+        .website-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="titulo-bienvenida">Bienvenid@s a</div>
+            <div class="titulo-principal">Conversaciones con Sentido</div>
+            <div class="subtitulo">El Juego</div>
+
+            <!-- SECCIÓN PARA UNIRSE CON CÓDIGO -->
+            <div class="seccion-codigo">
+                <div class="titulo-codigo">¿Ya tienes un código de reunión?</div>
+                <div class="form-codigo">
+                    <input type="text" class="input-codigo" id="inputCodigoExistente" 
+                           placeholder="Código (ej: ABC123)" maxlength="6">
+                    <input type="text" class="input-nombre" id="inputNombreExistente"
+                           placeholder="Tu nombre" maxlength="20">
+                    <button class="btn-unirse" onclick="unirseConCodigo()">Unirse a la Reunión</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- GRID DE TÓPICOS -->
+        <div class="topicos-grid">
+            <!-- Espiritualidad -->
+            <div class="topico-card" data-topico="espiritualidad">
+                <div class="topico-icono">🕊️</div>
+                <div class="topico-titulo">Espiritualidad</div>
+                <div class="topico-descripcion">Reflexiones sobre fe, espiritualidad y creencias personales</div>
+                
+                <button class="btn-crear" onclick="mostrarFormularioCrear('espiritualidad')">
+                    Crear Nueva Reunión
+                </button>
+
+                <!-- FORMULARIO CREAR -->
+                <div class="formulario-crear" id="form-crear-espiritualidad">
+                    <input type="text" class="input-crear" placeholder="Tu nombre como facilitador" maxlength="20">
+                    <button class="btn-continuar" onclick="crearReunion('espiritualidad')">
+                        Crear Reunión y Generar Código
+                    </button>
+                    <div class="codigo-generado" id="codigo-espiritualidad">
+                        <div class="codigo-texto" id="codigo-texto-espiritualidad"></div>
+                        <button class="btn-copiar" onclick="copiarCodigo('espiritualidad')">📋 Copiar Código</button>
+                        <button class="btn-ir-sala" onclick="irASala('espiritualidad')">Ir a la Sala</button>
+                    </div>
+                    <button class="btn-volver" onclick="volverAlTopico('espiritualidad')">← Crear otra reunión</button>
+                </div>
+            </div>
+
+            <!-- Familia -->
+            <div class="topico-card" data-topico="familia">
+                <div class="topico-icono">👨‍👩‍👧‍👦</div>
+                <div class="topico-titulo">Familia</div>
+                <div class="topico-descripcion">Vínculos familiares, tradiciones y relaciones cercanas</div>
+                
+                <button class="btn-crear" onclick="mostrarFormularioCrear('familia')">
+                    Crear Nueva Reunión
+                </button>
+
+                <!-- FORMULARIO CREAR -->
+                <div class="formulario-crear" id="form-crear-familia">
+                    <input type="text" class="input-crear" placeholder="Tu nombre como facilitador" maxlength="20">
+                    <button class="btn-continuar" onclick="crearReunion('familia')">
+                        Crear Reunión y Generar Código
+                    </button>
+                    <div class="codigo-generado" id="codigo-familia">
+                        <div class="codigo-texto" id="codigo-texto-familia"></div>
+                        <button class="btn-copiar" onclick="copiarCodigo('familia')">📋 Copiar Código</button>
+                        <button class="btn-ir-sala" onclick="irASala('familia')">Ir a la Sala</button>
+                    </div>
+                    <button class="btn-volver" onclick="volverAlTopico('familia')">← Crear otra reunión</button>
+                </div>
+            </div>
+
+            <!-- Pareja -->
+            <div class="topico-card" data-topico="pareja">
+                <div class="topico-icono">💑</div>
+                <div class="topico-titulo">Pareja</div>
+                <div class="topico-descripcion">Amor, relaciones de pareja y comunicación emocional</div>
+                
+                <button class="btn-crear" onclick="mostrarFormularioCrear('pareja')">
+                    Crear Nueva Reunión
+                </button>
+
+                <!-- FORMULARIO CREAR -->
+                <div class="formulario-crear" id="form-crear-pareja">
+                    <input type="text" class="input-crear" placeholder="Tu nombre como facilitador" maxlength="20">
+                    <button class="btn-continuar" onclick="crearReunion('pareja')">
+                        Crear Reunión y Generar Código
+                    </button>
+                    <div class="codigo-generado" id="codigo-pareja">
+                        <div class="codigo-texto" id="codigo-texto-pareja"></div>
+                        <button class="btn-copiar" onclick="copiarCodigo('pareja')">📋 Copiar Código</button>
+                        <button class="btn-ir-sala" onclick="irASala('pareja')">Ir a la Sala</button>
+                    </div>
+                    <button class="btn-volver" onclick="volverAlTopico('pareja')">← Crear otra reunión</button>
+                </div>
+            </div>
+
+            <!-- Padre/Hijos -->
+            <div class="topico-card" data-topico="padre_hijos">
+                <div class="topico-icono">👨‍👦</div>
+                <div class="topico-titulo">Padre/Hijos</div>
+                <div class="topico-descripcion">Paternidad, crianza y relaciones intergeneracionales</div>
+                
+                <button class="btn-crear" onclick="mostrarFormularioCrear('padre_hijos')">
+                    Crear Nueva Reunión
+                </button>
+
+                <!-- FORMULARIO CREAR -->
+                <div class="formulario-crear" id="form-crear-padre_hijos">
+                    <input type="text" class="input-crear" placeholder="Tu nombre como facilitador" maxlength="20">
+                    <button class="btn-continuar" onclick="crearReunion('padre_hijos')">
+                        Crear Reunión y Generar Código
+                    </button>
+                    <div class="codigo-generado" id="codigo-padre_hijos">
+                        <div class="codigo-texto" id="codigo-texto-padre_hijos"></div>
+                        <button class="btn-copiar" onclick="copiarCodigo('padre_hijos')">📋 Copiar Código</button>
+                        <button class="btn-ir-sala" onclick="irASala('padre_hijos')">Ir a la Sala</button>
+                    </div>
+                    <button class="btn-volver" onclick="volverAlTopico('padre_hijos')">← Crear otra reunión</button>
+                </div>
+            </div>
+
+            <!-- Colegio -->
+            <div class="topico-card" data-topico="colegio">
+                <div class="topico-icono">🎓</div>
+                <div class="topico-titulo">Colegio</div>
+                <div class="topico-descripcion">Educación, aprendizaje y experiencias escolares</div>
+                
+                <button class="btn-crear" onclick="mostrarFormularioCrear('colegio')">
+                    Crear Nueva Reunión
+                </button>
+
+                <!-- FORMULARIO CREAR -->
+                <div class="formulario-crear" id="form-crear-colegio">
+                    <input type="text" class="input-crear" placeholder="Tu nombre como facilitador" maxlength="20">
+                    <button class="btn-continuar" onclick="crearReunion('colegio')">
+                        Crear Reunión y Generar Código
+                    </button>
+                    <div class="codigo-generado" id="codigo-colegio">
+                        <div class="codigo-texto" id="codigo-texto-colegio"></div>
+                        <button class="btn-copiar" onclick="copiarCodigo('colegio')">📋 Copiar Código</button>
+                        <button class="btn-ir-sala" onclick="irASala('colegio')">Ir a la Sala</button>
+                    </div>
+                    <button class="btn-volver" onclick="volverAlTopico('colegio')">← Crear otra reunión</button>
+                </div>
+            </div>
+
+            <!-- Desarrollo Personal -->
+            <div class="topico-card" data-topico="desarrollo_personal">
+                <div class="topico-icono">🌱</div>
+                <div class="topico-titulo">Desarrollo Personal</div>
+                <div class="topico-descripcion">Crecimiento, metas y superación personal</div>
+                
+                <button class="btn-crear" onclick="mostrarFormularioCrear('desarrollo_personal')">
+                    Crear Nueva Reunión
+                </button>
+
+                <!-- FORMULARIO CREAR -->
+                <div class="formulario-crear" id="form-crear-desarrollo_personal">
+                    <input type="text" class="input-crear" placeholder="Tu nombre como facilitador" maxlength="20">
+                    <button class="btn-continuar" onclick="crearReunion('desarrollo_personal')">
+                        Crear Reunión y Generar Código
+                    </button>
+                    <div class="codigo-generado" id="codigo-desarrollo_personal">
+                        <div class="codigo-texto" id="codigo-texto-desarrollo_personal"></div>
+                        <button class="btn-copiar" onclick="copiarCodigo('desarrollo_personal')">📋 Copiar Código</button>
+                        <button class="btn-ir-sala" onclick="irASala('desarrollo_personal')">Ir a la Sala</button>
+                    </div>
+                    <button class="btn-volver" onclick="volverAlTopico('desarrollo_personal')">← Crear otra reunión</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PIE DE PÁGINA - SOLO TEXTO -->
+        <div class="footer">
+            <a href="https://www.7preguntas.com" class="website-link" target="_blank">
+                www.7preguntas.com
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let codigosGenerados = {};
+        let nombresFacilitadores = {};
+
+        // UNIRSE CON CÓDIGO EXISTENTE - CORREGIDO
+        function unirseConCodigo() {
+            const codigo = document.getElementById('inputCodigoExistente').value.trim().toUpperCase();
+            const nombre = document.getElementById('inputNombreExistente').value.trim();
+            
+            if (!codigo) {
+                alert('Por favor, ingresa el código de la reunión');
+                return;
+            }
+
+            if (!nombre) {
+                alert('Por favor, ingresa tu nombre');
+                return;
+            }
+
+            if (codigo.length !== 6) {
+                alert('El código debe tener 6 caracteres');
+                return;
+            }
+
+            // Verificar si el código existe en localStorage
+            const salaData = localStorage.getItem(`sala_${codigo}`);
+            
+            if (!salaData) {
+                // Si no existe en localStorage, podría ser una sala recién creada
+                // Vamos a intentar redirigir directamente
+                const posiblesTopicos = ['espiritualidad', 'familia', 'pareja', 'padre_hijos', 'colegio', 'desarrollo_personal'];
+                let topicoEncontrado = 'general';
+                
+                // Buscar en localStorage si existe alguna sala con este código
+                for (let topico of posiblesTopicos) {
+                    const clave = `sala_${codigo}_${topico}`;
+                    const datos = localStorage.getItem(clave);
+                    if (datos) {
+                        topicoEncontrado = topico;
+                        break;
+                    }
+                }
+                
+                // Redirigir a la sala de todos modos
+                window.location.href = `sala.html?codigo=${codigo}&topico=${topicoEncontrado}&participante=${encodeURIComponent(nombre)}&creador=false`;
+                return;
+            }
+
+            const datosSala = JSON.parse(salaData);
+            
+            // CREAR ESTADO INICIAL DE LA SALA SI NO EXISTE (PARA PARTICIPANTES)
+            const estadoSala = localStorage.getItem(`sala_estado_${codigo}`);
+            if (!estadoSala) {
+                const estadoInicial = {
+                    participantes: [],
+                    turnoActual: -1,
+                    preguntaActual: 'Esperando primera pregunta del facilitador...',
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(`sala_estado_${codigo}`, JSON.stringify(estadoInicial));
+            }
+            
+            // Redirigir a la sala
+            window.location.href = `sala.html?codigo=${codigo}&topico=${datosSala.topico}&participante=${encodeURIComponent(nombre)}&creador=false`;
+        }
+
+        // MOSTRAR FORMULARIO CREAR
+        function mostrarFormularioCrear(topico) {
+            // Ocultar todos los formularios primero
+            document.querySelectorAll('.formulario-crear').forEach(form => {
+                form.style.display = 'none';
+            });
+            
+            // Mostrar solo el formulario del tópico seleccionado
+            const formulario = document.getElementById(`form-crear-${topico}`);
+            formulario.style.display = 'block';
+            
+            // Hacer scroll suave al formulario
+            formulario.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // CREAR REUNIÓN
+        function crearReunion(topico) {
+            const formulario = document.getElementById(`form-crear-${topico}`);
+            const input = formulario.querySelector('.input-crear');
+            const nombreFacilitador = input.value.trim();
+            
+            if (!nombreFacilitador) {
+                alert('Por favor, ingresa tu nombre como facilitador');
+                return;
+            }
+
+            // Generar código único
+            const codigo = generarCodigo();
+            codigosGenerados[topico] = codigo;
+            nombresFacilitadores[topico] = nombreFacilitador;
+            
+            // Mostrar código generado
+            const codigoTexto = document.getElementById(`codigo-texto-${topico}`);
+            const codigoContainer = document.getElementById(`codigo-${topico}`);
+            
+            codigoTexto.textContent = codigo;
+            codigoContainer.classList.add('mostrar');
+            
+            // Guardar en localStorage - DATOS DE LA SALA
+            localStorage.setItem(`sala_${codigo}`, JSON.stringify({
+                topico: topico,
+                facilitador: nombreFacilitador,
+                timestamp: Date.now()
+            }));
+
+            // También guardar con clave específica por tópico para mayor compatibilidad
+            localStorage.setItem(`sala_${codigo}_${topico}`, JSON.stringify({
+                topico: topico,
+                facilitador: nombreFacilitador,
+                timestamp: Date.now()
+            }));
+
+            // CREAR ESTADO INICIAL DE LA SALA
+            const estadoInicial = {
+                participantes: [{
+                    id: generarId(),
+                    nombre: nombreFacilitador,
+                    esFacilitador: true
+                }],
+                turnoActual: -1,
+                preguntaActual: 'Presiona "Nueva Pregunta" para comenzar',
+                timestamp: Date.now()
+            };
+            localStorage.setItem(`sala_estado_${codigo}`, JSON.stringify(estadoInicial));
+
+            // Ocultar el botón de crear y mostrar el código
+            formulario.querySelector('.btn-continuar').style.display = 'none';
+            input.style.display = 'none';
+        }
+
+        // COPIAR CÓDIGO
+        function copiarCodigo(topico) {
+            const codigo = codigosGenerados[topico];
+            if (codigo) {
+                navigator.clipboard.writeText(codigo).then(() => {
+                    alert('¡Código copiado! Compártelo con los participantes.');
+                });
+            }
+        }
+
+        // IR A LA SALA
+        function irASala(topico) {
+            const codigo = codigosGenerados[topico];
+            const nombreFacilitador = nombresFacilitadores[topico];
+            
+            if (codigo && nombreFacilitador) {
+                window.location.href = `sala.html?codigo=${codigo}&topico=${topico}&participante=${encodeURIComponent(nombreFacilitador)}&creador=true`;
+            }
+        }
+
+        // VOLVER AL TÓPICO
+        function volverAlTopico(topico) {
+            const formulario = document.getElementById(`form-crear-${topico}`);
+            formulario.style.display = 'none';
+            
+            // Resetear el formulario
+            formulario.querySelector('.input-crear').value = '';
+            formulario.querySelector('.input-crear').style.display = 'block';
+            formulario.querySelector('.btn-continuar').style.display = 'block';
+            formulario.querySelector('.codigo-generado').classList.remove('mostrar');
+        }
+
+        // GENERAR CÓDIGO
+        function generarCodigo() {
+            const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let codigo = '';
+            for (let i = 0; i < 6; i++) {
+                codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+            }
+            return codigo;
+        }
+
+        // GENERAR ID ÚNICO
+        function generarId() {
+            return Math.random().toString(36).substr(2, 9);
+        }
+
+        // AUTO MAYÚSCULAS EN CÓDIGO
+        document.getElementById('inputCodigoExistente').addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase();
+        });
+
+        // ENTER PARA UNIRSE CON CÓDIGO
+        document.getElementById('inputCodigoExistente').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') unirseConCodigo();
+        });
+
+        document.getElementById('inputNombreExistente').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') unirseConCodigo();
+        });
+
+        // ENTER PARA CREAR REUNIÓN
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.input-crear').forEach(input => {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        const formulario = this.closest('.formulario-crear');
+                        const topico = formulario.id.replace('form-crear-', '');
+                        crearReunion(topico);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
