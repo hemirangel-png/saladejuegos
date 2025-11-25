@@ -358,26 +358,22 @@
     <div class="estado-conexion" id="estadoConexion">🔄 Sincronizando...</div>
 
     <div class="container">
-        <!-- HEADER MINI -->
         <div class="header">
             <div style="font-size: 18px; font-weight: 600;">Conversaciones</div>
             <div class="codigo-sala" id="codigoSala">ABC123</div>
             <div class="info-topico" id="infoTopico">Tópico: Cargando...</div>
         </div>
 
-        <!-- MENSAJE DE ESPERA -->
         <div class="mensaje-espera" id="mensajeEspera" style="display: none;">
             ⏳ Esperando al facilitador para iniciar la reunión...
         </div>
 
-        <!-- TURNO ACTUAL -->
         <div class="turno-actual">
             <div>🎤 Turno de:</div>
             <div class="participante-actual" id="participanteActual">Esperando primera pregunta...</div>
             <div class="contador-turno" id="contadorTurno">Preparando la conversación</div>
         </div>
 
-        <!-- TARJETA DE PREGUNTA PRINCIPAL -->
         <div class="pregunta-container">
             <div class="topico-titulo" id="topicoTitulo">CARGANDO...</div>
             <div class="pregunta-texto" id="preguntaTexto">
@@ -385,17 +381,14 @@
             </div>
         </div>
 
-        <!-- LISTA HORIZONTAL DE PARTICIPANTES -->
         <div class="participantes-container">
             <div style="font-size: 14px; margin-bottom: 10px; text-align: center; color: rgba(255,255,255,0.8);">
                 Participantes (<span id="contadorParticipantes">0</span>)
             </div>
             <div class="participantes-lista" id="listaParticipantes">
-                <!-- Los participantes se cargan dinámicamente -->
-            </div>
+                </div>
         </div>
 
-        <!-- BOTONES DEL FACILITADOR -->
         <div class="botones-facilitador" id="botonesFacilitador" style="display: none;">
             <button class="btn-nueva-pregunta" id="btnNuevaPregunta" onclick="nuevaPregunta()">
                 🎴 Nueva Pregunta
@@ -405,12 +398,10 @@
             </button>
         </div>
 
-        <!-- BOTÓN VOLVER AL INICIO -->
         <button class="btn-volver-inicio" onclick="volverAlInicio()">
             ← Volver al Inicio
         </button>
 
-        <!-- PIE DE PÁGINA - SOLO TEXTO -->
         <div class="footer">
             <a href="https://www.7preguntas.com" class="website-link" target="_blank">
                 www.7preguntas.com
@@ -444,7 +435,7 @@
             // Actualizar interfaz básica
             document.getElementById('codigoSala').textContent = codigoSala;
             document.getElementById('infoTopico').textContent = `Tópico: ${obtenerNombreTopico(topicoActual)}`;
-            document.getElementById('topicoTitulo').textContent = topicoActual.toUpperCase();
+            document.getElementById('topicoTitulo').textContent = obtenerNombreTopico(topicoActual).toUpperCase();
 
             // Mostrar botones si es facilitador
             if (esFacilitador) {
@@ -529,6 +520,13 @@
                     localStorage.setItem(`sala_estado_${codigoSala}`, JSON.stringify(datos));
                     console.log('Participante agregado:', miNombre);
                 } else {
+                    // Actualizar mi ID si ya estaba por nombre, para mantener la persistencia
+                    const miParticipante = datos.participantes.find(p => p.nombre === miNombre && p.esFacilitador === esFacilitador);
+                    if (miParticipante) {
+                        miParticipante.id = miId;
+                        datos.timestamp = Date.now();
+                        localStorage.setItem(`sala_estado_${codigoSala}`, JSON.stringify(datos));
+                    }
                     console.log('Participante ya está en la lista:', miNombre);
                 }
             } else if (esFacilitador) {
@@ -619,33 +617,22 @@
                 return;
             }
 
-            // EL FACILITADOR TAMBIÉN PUEDE SER SELECCIONADO
-            // Seleccionar cualquier participante (incluyendo al facilitador)
             let participantesElegibles = participantes;
             
-            // Si solo hay 2 participantes, permitir que se repita el mismo
-            if (participantes.length <= 2) {
-                // Seleccionar cualquier participante (puede ser el mismo)
-                const indiceAleatorio = Math.floor(Math.random() * participantesElegibles.length);
-                const participanteSeleccionado = participantesElegibles[indiceAleatorio];
-                turnoActual = participantes.findIndex(p => p.id === participanteSeleccionado.id);
-            } else {
+            if (participantes.length > 2) {
                 // Para 3 o más participantes, evitar repetir el mismo
-                let participantesElegibles = participantes.filter(p => 
+                participantesElegibles = participantes.filter(p => 
                     p.id !== (participantes[turnoActual]?.id || '')
                 );
-
-                // Si no hay participantes elegibles, usar todos
-                if (participantesElegibles.length === 0) {
-                    participantesElegibles = participantes;
-                }
-
-                // Seleccionar participante aleatorio
-                const indiceAleatorio = Math.floor(Math.random() * participantesElegibles.length);
-                const participanteSeleccionado = participantesElegibles[indiceAleatorio];
-                turnoActual = participantes.findIndex(p => p.id === participanteSeleccionado.id);
             }
 
+            // Seleccionar participante aleatorio
+            const indiceAleatorio = Math.floor(Math.random() * participantesElegibles.length);
+            const participanteSeleccionado = participantesElegibles[indiceAleatorio];
+            
+            // Encontrar el índice del participante seleccionado en la lista original
+            turnoActual = participantes.findIndex(p => p.id === participanteSeleccionado.id);
+            
             guardarEstadoSala();
             actualizarInterfaz();
             
@@ -697,7 +684,7 @@
             // Configurar botones del facilitador
             if (esFacilitador) {
                 const btnSiguienteTurno = document.getElementById('btnSiguienteTurno');
-                btnSiguienteTurno.disabled = participantes.length <= 1;
+                btnSiguienteTurno.disabled = participantes.length < 1; // Ahora permite asignar turno si solo está el facilitador
             }
         }
 
@@ -717,6 +704,13 @@
                     "¿Qué aprendiste de tus padres?",
                     "¿Qué significa 'hogar' para ti?",
                     "¿Qué momento familiar te ha marcado más?"
+                ],
+                'amigos': [ // <-- NUEVA CATEGORÍA AÑADIDA
+                    "¿Qué cualidad valoras más en un amigo?",
+                    "¿Qué momento con un amigo(a) te hizo darte cuenta de su valor?",
+                    "¿Cómo mantienes una amistad a distancia o en el tiempo?",
+                    "¿Qué significa la lealtad para ti en una amistad?",
+                    "Si pudieras agradecerle algo a un amigo(a), ¿qué sería?"
                 ],
                 'pareja': [
                     "¿Qué valoras más en una relación?",
@@ -761,10 +755,12 @@
             const nombres = {
                 'espiritualidad': 'Espiritualidad',
                 'familia': 'Familia',
+                'amigos': 'Amigos', // <-- NOMBRE AÑADIDO
                 'pareja': 'Pareja',
                 'padre_hijos': 'Padre/Hijos',
                 'colegio': 'Colegio',
-                'desarrollo_personal': 'Desarrollo Personal'
+                'desarrollo_personal': 'Desarrollo Personal',
+                'general': 'General'
             };
             return nombres[topico] || topico;
         }
