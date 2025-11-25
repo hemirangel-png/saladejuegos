@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversaciones con Sentido</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        body {
+            background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            color: white;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 1;
+        }
+
+        /* HEADER */
+        .header {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px;
+            border-radius: 10px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+            height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .topico-titulo-header {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* TARJETA DE PREGUNTA PRINCIPAL */
+        .pregunta-container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .pregunta-texto {
+            font-size: 22px;
+            font-weight: 600;
+            line-height: 1.4;
+            padding: 10px;
+        }
+
+        /* BOTONES PRINCIPALES */
+        .botones-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-principal {
+            background: #D0342C;
+            color: white;
+            border: none;
+            padding: 18px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-principal:hover {
+            background: #B52A23;
+            transform: translateY(-2px);
+        }
+
+        .btn-dado {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-dado:hover {
+            background: #219653;
+            transform: translateY(-2px);
+        }
+
+        /* BOTÓN VOLVER */
+        .btn-volver-inicio {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-volver-inicio:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* ANIMACIÓN */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes diceRoll {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(1.1); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            75% { transform: rotate(270deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .dice-roll {
+            animation: diceRoll 0.6s ease;
+        }
+
+        /* PIE DE PÁGINA */
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+        }
+
+        .website-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+
+        .website-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="topico-titulo-header" id="topicoTituloHeader">Espiritualidad</div>
+        </div>
+
+        <!-- TARJETA DE PREGUNTA PRINCIPAL -->
+        <div class="pregunta-container fade-in" id="preguntaContainer">
+            <div class="pregunta-texto" id="preguntaTexto">
+                Cargando pregunta...
+            </div>
+        </div>
+
+        <!-- BOTONES PRINCIPALES -->
+        <div class="botones-container">
+            <button class="btn-principal" onclick="nuevaPregunta()">
+                🔄 Siguiente Pregunta
+            </button>
+            
+            <button class="btn-dado" onclick="lanzarDado()">
+                🎲 Lanzar Dado (Aleatorizar)
+            </button>
+
+            <button class="btn-volver-inicio" onclick="volverAlInicio()">
+                ← Volver al Inicio
+            </button>
+        </div>
+
+        <!-- PIE DE PÁGINA -->
+        <div class="footer">
+            <a href="https://www.7preguntas.com" class="website-link" target="_blank">
+                www.7preguntas.com
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // VARIABLES GLOBALES
+        let topicoActual = '';
+        let preguntas = [];
+        let preguntaIndex = 0;
+        let historialPreguntas = [];
+
+        // INICIALIZAR TÓPICO
+        function inicializarTopico() {
+            const urlParams = new URLSearchParams(window.location.search);
+            topicoActual = urlParams.get('topico') || 'espiritualidad';
+
+            console.log('Inicializando tópico:', { topicoActual });
+
+            // Actualizar interfaz
+            actualizarHeader();
+            
+            // Cargar preguntas del tópico
+            cargarPreguntas();
+            
+            // Mostrar primera pregunta
+            mostrarPreguntaActual();
+        }
+
+        // ACTUALIZAR HEADER
+        function actualizarHeader() {
+            const nombresTopicos = {
+                'espiritualidad': 'Espiritualidad',
+                'familia': 'Familia', 
+                'amigos': 'Amigos',
+                'pareja': 'Pareja',
+                'padre_hijos': 'Padre/Hijos',
+                'colegio': 'Colegio',
+                'desarrollo_personal': 'Desarrollo Personal'
+            };
+
+            document.getElementById('topicoTituloHeader').textContent = 
+                nombresTopicos[topicoActual] || topicoActual;
+        }
+
+        // CARGAR PREGUNTAS DEL TÓPICO
+        function cargarPreguntas() {
+            const bancoPreguntas = {
+                'espiritualidad': [
+                    "¿Qué te da paz interior?",
+                    "¿Cómo encuentras significado en la vida?",
+                    "¿Qué creencias te guían en momentos difíciles?",
+                    "¿Qué te conecta con algo mayor que tú mismo?",
+                    "¿Qué práctica espiritual te nutre más?",
+                    "¿Cuándo te sientes más cerca de lo divino?",
+                    "¿Qué has aprendido sobre el perdón?",
+                    "¿Cómo defines tu propósito en la vida?",
+                    "¿Qué momento te hizo cuestionar tus creencias?",
+                    "¿Cómo practicas la gratitud en tu vida diaria?"
+                ],
+                'familia': [
+                    "¿Cuál es tu recuerdo más valioso con tu familia?",
+                    "¿Qué tradición familiar te gusta más y por qué?",
+                    "¿Qué aprendiste de tus padres que llevas contigo?",
+                    "¿Qué significa 'hogar' para ti?",
+                    "¿Qué momento familiar te ha marcado más?",
+                    "¿Qué cualidad admiras más en tu familia?",
+                    "¿Cómo ha cambiado tu concepto de familia con el tiempo?",
+                    "¿Qué consejo familiar te han dado que aún recuerdas?",
+                    "¿Qué te gustaría heredar a las siguientes generaciones?",
+                    "¿Cómo defines el amor familiar?"
+                ],
+                'amigos': [
+                    "¿Qué hace a una amistad verdadera?",
+                    "¿Cuál es el mejor consejo que un amigo te ha dado?",
+                    "¿Qué momento con amigos nunca olvidarás?",
+                    "¿Cómo mantienes vivas las amistades a distancia?",
+                    "¿Qué has aprendido de tus amigos?",
+                    "¿Qué cualidad valoras más en un amigo?",
+                    "¿Cómo superaron un conflicto con un amigo?",
+                    "¿Qué actividad disfrutan más con amigos?",
+                    "¿Cómo conociste a tu mejor amigo?",
+                    "¿Qué significa la lealtad en la amistad?"
+                ],
+                'pareja': [
+                    "¿Qué valoras más en una relación de pareja?",
+                    "¿Cómo construyes y mantienes la confianza?",
+                    "¿Qué has aprendido del amor?",
+                    "¿Qué hace especial una relación duradera?",
+                    "¿Cómo manejas los conflictos en la relación?",
+                    "¿Qué momento romántico recuerdas con más cariño?",
+                    "¿Cómo mantienen viva la pasión con el tiempo?",
+                    "¿Qué cualidad admiras más en tu pareja?",
+                    "¿Cómo se apoyan mutuamente en momentos difíciles?",
+                    "¿Qué significa el compromiso para ti?"
+                ],
+                'padre_hijos': [
+                    "¿Qué te gusta más de ser padre/hijo?",
+                    "¿Qué valor quieres transmitir a tus hijos/padres?",
+                    "¿Cómo describirías tu relación familiar?",
+                    "¿Qué consejo sobre familia darías a otros?",
+                    "¿Qué momento con tus hijos/padres atesoras más?",
+                    "¿Qué has aprendido de tus hijos/padres?",
+                    "¿Cómo manejas los desafíos de la paternidad/filial?",
+                    "¿Qué tradición familiar crearon juntos?",
+                    "¿Qué sueñas para el futuro de tu familia?",
+                    "¿Cómo equilibran lo individual y lo familiar?"
+                ],
+                'colegio': [
+                    "¿Qué maestro recuerdas con más cariño y por qué?",
+                    "¿Qué aprendiste en la escuela que aún usas hoy?",
+                    "¿Qué experiencia escolar marcó tu vida?",
+                    "¿Qué recuerdo escolar te hace sonreír?",
+                    "¿Qué amistad escolar influyó en quien eres hoy?",
+                    "¿Qué materia te apasionaba más?",
+                    "¿Cómo enfrentaste los desafíos académicos?",
+                    "¿Qué actividad extracurricular disfrutabas?",
+                    "¿Qué consejo le darías a tu yo estudiante?",
+                    "¿Cómo la escuela moldeó tu personalidad?"
+                ],
+                'desarrollo_personal': [
+                    "¿Qué meta personal te emociona actualmente?",
+                    "¿Qué hábito mejoró significativamente tu vida?",
+                    "¿Qué te gustaría aprender este año?",
+                    "¿Cómo superas tus miedos más grandes?",
+                    "¿Qué miedo has vencido recientemente?",
+                    "¿Qué libro o persona te inspiró a cambiar?",
+                    "¿Cómo manejas el fracaso y el aprendizaje?",
+                    "¿Qué práctica diaria te mantiene enfocado?",
+                    "¿Cómo defines el éxito personal?",
+                    "¿Qué lección de vida repetirías a otros?"
+                ]
+            };
+
+            preguntas = bancoPreguntas[topicoActual] || bancoPreguntas.espiritualidad;
+            
+            // Mezclar preguntas para variedad
+            preguntas = mezclarArray([...preguntas]);
+        }
+
+        // NUEVA PREGUNTA
+        function nuevaPregunta() {
+            if (preguntas.length === 0) {
+                cargarPreguntas(); // Recargar si se acaban
+            }
+
+            // Guardar pregunta actual en historial
+            if (preguntaIndex < preguntas.length) {
+                historialPreguntas.push(preguntas[preguntaIndex]);
+            }
+
+            // Avanzar al siguiente índice
+            preguntaIndex++;
+            
+            // Si llegamos al final, volver a mezclar y reiniciar
+            if (preguntaIndex >= preguntas.length) {
+                preguntaIndex = 0;
+                preguntas = mezclarArray([...preguntas]);
+            }
+
+            mostrarPreguntaActual();
+        }
+
+        // LANZAR DADO - ALEATORIZAR PREGUNTAS
+        function lanzarDado() {
+            // Aplicar animación al botón
+            const btnDado = document.querySelector('.btn-dado');
+            btnDado.classList.add('dice-roll');
+            
+            // Mezclar preguntas completamente
+            preguntas = mezclarArray([...preguntas]);
+            preguntaIndex = 0;
+            
+            // Mostrar nueva pregunta aleatoria
+            mostrarPreguntaActual();
+            
+            // Quitar animación después de completar
+            setTimeout(() => {
+                btnDado.classList.remove('dice-roll');
+            }, 600);
+        }
+
+        // MOSTRAR PREGUNTA ACTUAL
+        function mostrarPreguntaActual() {
+            if (preguntas.length > 0 && preguntaIndex < preguntas.length) {
+                document.getElementById('preguntaTexto').textContent = preguntas[preguntaIndex];
+                
+                // Efecto visual
+                document.getElementById('preguntaContainer').classList.remove('fade-in');
+                void document.getElementById('preguntaContainer').offsetWidth;
+                document.getElementById('preguntaContainer').classList.add('fade-in');
+            }
+        }
+
+        // MEZCLAR ARRAY (algoritmo Fisher-Yates)
+        function mezclarArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // VOLVER AL INICIO
+        function volverAlInicio() {
+            window.location.href = 'index.html';
+        }
+
+        // INICIALIZAR AL CARGAR
+        document.addEventListener('DOMContentLoaded', inicializarTopico);
+
+        // TECLAS RÁPIDAS
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+                nuevaPregunta();
+            } else if (e.key === 'd' || e.key === 'D') {
+                lanzarDado();
+            } else if (e.key === 'Escape') {
+                volverAlInicio();
+            }
+        });
+    </script>
+</body>
+</html>
