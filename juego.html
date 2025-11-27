@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego - Conversaciones con Sentido</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        body {
+            background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: white;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            flex: 1;
+        }
+
+        /* HEADER */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .titulo-bienvenida {
+            font-size: 16px;
+            font-weight: 400;
+            margin-bottom: 6px;
+            opacity: 0.9;
+        }
+
+        .titulo-principal {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitulo {
+            font-size: 18px;
+            font-weight: 300;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        /* GRID DE TÓPICOS */
+        .topicos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .topico-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .topico-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .topico-icono {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .topico-titulo {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .topico-descripcion {
+            font-size: 12px;
+            opacity: 0.9;
+            line-height: 1.3;
+            margin-bottom: 12px;
+        }
+
+        /* PIE DE PÁGINA */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        .website-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+
+        .website-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .topicos-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 12px;
+            }
+            
+            .topico-card {
+                padding: 15px;
+                min-height: 130px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .topicos-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+            
+            .titulo-principal {
+                font-size: 28px;
+            }
+            
+            .subtitulo {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="titulo-bienvenida">Bienvenid@ a</div>
+            <div class="titulo-principal">Preguntas con Sentido</div>
+            <div class="subtitulo">Elige un tópico para comenzar</div>
+        </div>
+
+        <!-- GRID DE TÓPICOS -->
+        <div class="topicos-grid">
+            <!-- Espiritualidad -->
+            <div class="topico-card" data-topico="espiritualidad">
+                <div class="topico-icono">🕊️</div>
+                <div class="topico-titulo">Espiritualidad</div>
+                <div class="topico-descripcion">Reflexiones sobre fe, espiritualidad y creencias personales</div>
+            </div>
+
+            <!-- Familia -->
+            <div class="topico-card" data-topico="familia">
+                <div class="topico-icono">👨‍👩‍👧‍👦</div>
+                <div class="topico-titulo">Familia</div>
+                <div class="topico-descripcion">Vínculos familiares, tradiciones y relaciones cercanas</div>
+            </div>
+
+            <!-- Amigos -->
+            <div class="topico-card" data-topico="amigos">
+                <div class="topico-icono">👥</div>
+                <div class="topico-titulo">Amigos</div>
+                <div class="topico-descripcion">Amistades, momentos compartidos y conexiones sociales</div>
+            </div>
+
+            <!-- Pareja -->
+            <div class="topico-card" data-topico="pareja">
+                <div class="topico-icono">💑</div>
+                <div class="topico-titulo">Pareja</div>
+                <div class="topico-descripcion">Amor, relaciones de pareja y comunicación emocional</div>
+            </div>
+
+            <!-- Padre/Hijos -->
+            <div class="topico-card" data-topico="padre_hijos">
+                <div class="topico-icono">👨‍👦</div>
+                <div class="topico-titulo">Padre/Hijos</div>
+                <div class="topico-descripcion">Paternidad, crianza y relaciones intergeneracionales</div>
+            </div>
+
+            <!-- Colegio -->
+            <div class="topico-card" data-topico="colegio">
+                <div class="topico-icono">🎓</div>
+                <div class="topico-titulo">Colegio</div>
+                <div class="topico-descripcion">Educación, aprendizaje y experiencias escolares</div>
+            </div>
+
+            <!-- Desarrollo Personal -->
+            <div class="topico-card" data-topico="desarrollo_personal">
+                <div class="topico-icono">🌱</div>
+                <div class="topico-titulo">Desarrollo Personal</div>
+                <div class="topico-descripcion">Crecimiento, metas y superación personal</div>
+            </div>
+
+            <!-- ¿Qué? -->
+            <div class="topico-card" data-topico="que">
+                <div class="topico-icono">❓</div>
+                <div class="topico-titulo">¿Qué?</div>
+                <div class="topico-descripcion">Preguntas existenciales sobre propósito y significado</div>
+            </div>
+        </div>
+
+        <!-- BOTÓN VOLVER AL INICIO PRINCIPAL -->
+        <div class="text-center">
+            <a href="index.html" class="btn-volver-inicio" style="
+                background: rgba(255, 255, 255, 0.1);
+                color: white;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                padding: 12px 24px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 500;
+                transition: all 0.3s ease;
+                display: inline-block;
+                text-decoration: none;
+            ">
+                ← Volver al Inicio Principal
+            </a>
+        </div>
+
+        <!-- PIE DE PÁGINA -->
+        <div class="footer">
+            <a href="https://www.7preguntas.com" class="website-link" target="_blank">
+                www.7preguntas.com
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // INICIALIZAR - AGREGAR EVENT LISTENERS A LOS TÓPICOS
+        document.addEventListener('DOMContentLoaded', function() {
+            // Agregar event listeners a todos los tópicos
+            document.querySelectorAll('.topico-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    // Obtener el tópico del card
+                    const topico = this.dataset.topico;
+                    
+                    // Redirigir a la página del tópico del juego
+                    window.location.href = `juego-topico.html?topico=${topico}`;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
