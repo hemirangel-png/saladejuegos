@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sala de Juego - Conversaciones con Sentido</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script>
+        // ✅ TU CONFIGURACIÓN FIREBASE REAL
+        const firebaseConfig = {
+            apiKey: "AIzaSyAMLq68ijwQwmbfi1aq-yO0gK9TdCIstZ4",
+            authDomain: "ccs-el-juego.firebaseapp.com",
+            databaseURL: "https://ccs-el-juego-default-rtdb.firebaseio.com",
+            projectId: "ccs-el-juego",
+            storageBucket: "ccs-el-juego.firebasestorage.app",
+            messagingSenderId: "1067594728486",
+            appId: "1:1067594728486:web:a5510a9baba4d26e12d2e7"
+        };
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        body {
+            background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            color: white;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 1;
+        }
+
+        /* HEADER */
+        .header {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px;
+            border-radius: 10px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+            height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .topico-titulo-header {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .sala-info {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        /* TARJETA DE PREGUNTA PRINCIPAL */
+        .pregunta-container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .pregunta-texto {
+            font-size: 22px;
+            font-weight: 600;
+            line-height: 1.4;
+            padding: 10px;
+        }
+
+        .info-turno {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        /* BOTONES PRINCIPALES */
+        .botones-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-principal {
+            background: #D0342C;
+            color: white;
+            border: none;
+            padding: 18px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-principal:hover {
+            background: #B52A23;
+            transform: translateY(-2px);
+        }
+
+        .btn-principal:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.6;
+        }
+
+        .btn-dado {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-dado:hover {
+            background: #219653;
+            transform: translateY(-2px);
+        }
+
+        .btn-dado:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.6;
+        }
+
+        /* BOTÓN VOLVER */
+        .btn-volver-inicio {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-volver-inicio:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* PANEL DE JUGADORES (MÁS PEQUEÑO Y ABAJO) */
+        .jugadores-container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px;
+            border-radius: 10px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-top: auto;
+        }
+
+        .jugadores-titulo {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .jugadores-lista {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .jugador {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 10px;
+            border-radius: 15px;
+            border: 1px solid transparent;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .jugador.turno-actual {
+            background: rgba(46, 204, 113, 0.3);
+            border-color: #27ae60;
+            transform: scale(1.05);
+        }
+
+        .jugador.tu {
+            background: rgba(52, 152, 219, 0.3);
+            border-color: #3498db;
+        }
+
+        .jugador.creador::before {
+            content: "👑";
+            font-size: 10px;
+        }
+
+        .jugador.turno-actual::after {
+            content: "🎯";
+            font-size: 10px;
+        }
+
+        .jugador.desconectado {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+
+        .jugador.desconectado::after {
+            content: "❌";
+            font-size: 10px;
+        }
+
+        /* ANIMACIONES */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes gentlePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .dice-pulse {
+            animation: gentlePulse 0.4s ease;
+        }
+
+        @keyframes highlight {
+            0% { background: rgba(46, 204, 113, 0.5); }
+            100% { background: rgba(46, 204, 113, 0.3); }
+        }
+
+        .highlight {
+            animation: highlight 1s ease;
+        }
+
+        /* PIE DE PÁGINA */
+        .footer {
+            text-align: center;
+            margin-top: 10px;
+            padding: 10px;
+        }
+
+        .website-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 12px;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+
+        .website-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="topico-titulo-header" id="topicoTituloHeader">Cargando...</div>
+            <div class="sala-info" id="salaInfo">Conectando a la sala...</div>
+        </div>
+
+        <!-- TARJETA DE PREGUNTA PRINCIPAL -->
+        <div class="pregunta-container fade-in" id="preguntaContainer">
+            <div class="pregunta-texto" id="preguntaTexto">
+                Esperando para comenzar...
+            </div>
+            <div class="info-turno" id="infoTurno">
+                Conectando con los jugadores...
+            </div>
+        </div>
+
+        <!-- BOTONES PRINCIPALES -->
+        <div class="botones-container">
+            <button class="btn-principal" id="btnSiguiente" onclick="siguienteTurno()" disabled>
+                🔄 Siguiente Turno
+            </button>
+            
+            <button class="btn-dado" id="btnLanzarDado" onclick="lanzarDado()" disabled>
+                🎲 Lanzar Dado
+            </button>
+        </div>
+
+        <!-- PANEL DE JUGADORES (ABAJO Y MÁS PEQUEÑO) -->
+        <div class="jugadores-container fade-in">
+            <div class="jugadores-titulo">🎮 JUGADORES EN SALA</div>
+            <div class="jugadores-lista" id="jugadoresLista">
+                <div class="jugador">
+                    <div>Cargando...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTÓN SALIR -->
+        <button class="btn-volver-inicio" onclick="salirDeSala()">
+            ← Salir de la Sala
+        </button>
+
+        <!-- PIE DE PÁGINA -->
+        <div class="footer">
+            <a href="https://www.7preguntas.com" class="website-link" target="_blank">
+                www.7preguntas.com
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // VARIABLES GLOBALES CON FIREBASE REAL
+        let topicoActual = '';
+        let codigoSala = '';
+        let miNombre = '';
+        let esCreador = false;
+        let miJugadorId = '';
+        let preguntas = [];
+        let preguntaIndex = 0;
+        let database = firebase.database();
+
+        // BANCO DE PREGUNTAS COMPLETO
+        const bancoPreguntas = {
+            'que': [
+                "¿Qué te hace sentir realmente vivo?",
+                "¿Qué cambiarías de tu vida si el miedo no existiera?",
+                "¿Qué significa el éxito para ti?",
+                "¿Qué te gustaría que la gente recordara de ti?",
+                "¿Qué harías diferente si supieras que nadie te juzgaría?",
+                "¿Qué te impide ser completamente feliz?",
+                "¿Qué aprendiste de tu mayor fracaso?",
+                "¿Qué te gustaría crear en este mundo?",
+                "¿Qué necesitas soltar para seguir adelante?",
+                "¿Qué te gustaría entender mejor sobre ti mismo?"
+            ],
+            'espiritualidad': [
+                "¿Qué te da paz interior?",
+                "¿Cómo encuentras significado en la vida?",
+                "¿Qué creencias te guían en momentos difíciles?",
+                "¿Qué te conecta con algo mayor que tú mismo?",
+                "¿Qué práctica espiritual te nutre más?",
+                "¿Cuándo te sientes más cerca de lo divino?",
+                "¿Qué has aprendido sobre el perdón?",
+                "¿Cómo defines tu propósito en la vida?",
+                "¿Qué momento te hizo cuestionar tus creencias?",
+                "¿Cómo practicas la gratitud en tu vida diaria?"
+            ],
+            'familia': [
+                "¿Cuál es tu recuerdo más valioso con tu familia?",
+                "¿Qué tradición familiar te gusta más y por qué?",
+                "¿Qué aprendiste de tus padres que llevas contigo?",
+                "¿Qué significa 'hogar' para ti?",
+                "¿Qué momento familiar te ha marcado más?",
+                "¿Qué cualidad admiras más en tu familia?",
+                "¿Cómo ha cambiado tu concepto de familia con el tiempo?",
+                "¿Qué consejo familiar te han dado que aún recuerdas?",
+                "¿Qué te gustaría heredar a las siguientes generaciones?",
+                "¿Cómo defines el amor familiar?"
+            ],
+            'amigos': [
+                "¿Qué hace a una amistad verdadera?",
+                "¿Cuál es el mejor consejo que un amigo te ha dado?",
+                "¿Qué momento con amigos nunca olvidarás?",
+                "¿Cómo mantienes vivas las amistades a distancia?",
+                "¿Qué has aprendido de tus amigos?",
+                "¿Qué cualidad valoras más en un amigo?",
+                "¿Cómo superaron un conflicto con un amigo?",
+                "¿Qué actividad disfrutan más con amigos?",
+                "¿Cómo conociste a tu mejor amigo?",
+                "¿Qué significa la lealtad en la amistad?"
+            ],
+            'pareja': [
+                "¿Qué valoras más en una relación de pareja?",
+                "¿Cómo construyes y mantienes la confianza?",
+                "¿Qué has aprendido del amor?",
+                "¿Qué hace especial una relación duradera?",
+                "¿Cómo manejas los conflictos en la relación?",
+                "¿Qué momento romántico recuerdas con más cariño?",
+                "¿Cómo mantienen viva la pasión con el tiempo?",
+                "¿Qué cualidad admiras más en tu pareja?",
+                "¿Cómo se apoyan mutuamente en momentos difíciles?",
+                "¿Qué significa el compromiso para ti?"
+            ],
+            'padre_hijos': [
+                "¿Qué te gusta más de ser padre/hijo?",
+                "¿Qué valor quieres transmitir a tus hijos/padres?",
+                "¿Cómo describirías tu relación familiar?",
+                "¿Qué consejo sobre familia darías a otros?",
+                "¿Qué momento con tus hijos/padres atesoras más?",
+                "¿Qué has aprendido de tus hijos/padres?",
+                "¿Cómo manejas los desafíos de la paternidad/filial?",
+                "¿Qué tradición familiar crearon juntos?",
+                "¿Qué sueñas para el futuro de tu familia?",
+                "¿Cómo equilibran lo individual y lo familiar?"
+            ],
+            'colegio': [
+                "¿Qué maestro recuerdas con más cariño y por qué?",
+                "¿Qué aprendiste en la escuela que aún usas hoy?",
+                "¿Qué experiencia escolar marcó tu vida?",
+                "¿Qué recuerdo escolar te hace sonreír?",
+                "¿Qué amistad escolar influyó en quien eres hoy?",
+                "¿Qué materia te apasionaba más?",
+                "¿Cómo enfrentaste los desafíos académicos?",
+                "¿Qué actividad extracurricular disfrutabas?",
+                "¿Qué consejo le darías a tu yo estudiante?",
+                "¿Cómo la escuela moldeó tu personalidad?"
+            ],
+            'desarrollo_personal': [
+                "¿Qué meta personal te emociona actualmente?",
+                "¿Qué hábito mejoró significativamente tu vida?",
+                "¿Qué te gustaría aprender este año?",
+                "¿Cómo superas tus miedos más grandes?",
+                "¿Qué miedo has vencido recientemente?",
+                "¿Qué libro o persona te inspiró a cambiar?",
+                "¿Cómo manejas el fracaso y el aprendizaje?",
+                "¿Qué práctica diaria te mantiene enfocado?",
+                "¿Cómo defines el éxito personal?",
+                "¿Qué lección de vida repetirías a otros?"
+            ]
+        };
+
+        // NOMBRES DE TÓPICOS
+        const nombresTopicos = {
+            'que': '¿Qué?',
+            'espiritualidad': 'Espiritualidad',
+            'familia': 'Familia', 
+            'amigos': 'Amigos',
+            'pareja': 'Pareja',
+            'padre_hijos': 'Padre/Hijos',
+            'colegio': 'Colegio',
+            'desarrollo_personal': 'Desarrollo Personal'
+        };
+
+        // INICIALIZAR SALA CON FIREBASE REAL - CORREGIDO
+        function inicializarSala() {
+            const urlParams = new URLSearchParams(window.location.search);
+            topicoActual = urlParams.get('topico') || 'que';
+            codigoSala = urlParams.get('sala') || '';
+            
+            console.log('🔍 DEBUG - Parámetros URL:', {topico: topicoActual, sala: codigoSala});
+            
+            // Obtener datos de localStorage
+            const salaData = JSON.parse(localStorage.getItem('salaActual') || '{}');
+            console.log('🔍 DEBUG - localStorage:', salaData);
+            
+            miNombre = salaData.miNombre || 'Jugador';
+            esCreador = salaData.esCreador || false;
+
+            // Si no hay sala en URL, usar localStorage
+            if (!codigoSala && salaData.codigo) {
+                codigoSala = salaData.codigo;
+                console.log('🔄 Usando código de localStorage:', codigoSala);
+            }
+
+            if (!codigoSala) {
+                console.error('❌ ERROR: No hay código de sala en URL ni localStorage');
+                alert('Error: No se pudo conectar a la sala. Volviendo al inicio.');
+                window.location.href = 'https://hemirangel-png.github.io/saladejuegos/index.html';
+                return;
+            }
+
+            console.log('✅ Inicializando sala:', { topicoActual, codigoSala, miNombre, esCreador });
+
+            // Actualizar interfaz
+            actualizarHeader();
+            cargarPreguntas();
+            
+            // Escuchar cambios en la sala en tiempo real
+            escucharCambiosSala();
+            
+            // Encontrar mi ID de jugador
+            encontrarMiJugadorId();
+        }
+
+        // ACTUALIZAR HEADER
+        function actualizarHeader() {
+            const nombreTopico = nombresTopicos[topicoActual] || topicoActual;
+            document.getElementById('topicoTituloHeader').textContent = nombreTopico;
+            document.getElementById('salaInfo').textContent = `Sala: ${codigoSala} | Tú: ${miNombre}`;
+        }
+
+        // ESCUCHAR CAMBIOS EN LA SALA EN TIEMPO REAL
+        function escucharCambiosSala() {
+            database.ref('salas/' + codigoSala).on('value', (snapshot) => {
+                const sala = snapshot.val();
+                
+                if (!sala) {
+                    alert('La sala ha sido eliminada');
+                    window.location.href = 'https://hemirangel-png.github.io/saladejuegos/index.html';
+                    return;
+                }
+
+                // Actualizar lista de jugadores
+                actualizarListaJugadores(sala.jugadores);
+                
+                // Actualizar pregunta actual
+                if (sala.preguntaActual) {
+                    document.getElementById('preguntaTexto').textContent = sala.preguntaActual;
+                }
+
+                // Actualizar estado del juego
+                actualizarEstadoJuego(sala);
+            });
+        }
+
+        // ACTUALIZAR LISTA DE JUGADORES
+        function actualizarListaJugadores(jugadores) {
+            const jugadoresLista = document.getElementById('jugadoresLista');
+            jugadoresLista.innerHTML = '';
+
+            if (!jugadores) return;
+
+            Object.keys(jugadores).forEach(jugadorId => {
+                const jugador = jugadores[jugadorId];
+                const jugadorElement = document.createElement('div');
+                jugadorElement.className = 'jugador';
+                
+                if (jugador.turno) {
+                    jugadorElement.classList.add('turno-actual');
+                }
+                if (jugador.nombre === miNombre) {
+                    jugadorElement.classList.add('tu');
+                }
+                if (jugador.esCreador) {
+                    jugadorElement.classList.add('creador');
+                }
+                if (jugador.conectado === false) {
+                    jugadorElement.classList.add('desconectado');
+                }
+
+                jugadorElement.textContent = jugador.nombre;
+                jugadoresLista.appendChild(jugadorElement);
+            });
+        }
+
+        // ACTUALIZAR ESTADO DEL JUEGO
+        function actualizarEstadoJuego(sala) {
+            const btnSiguiente = document.getElementById('btnSiguiente');
+            const btnLanzarDado = document.getElementById('btnLanzarDado');
+            const infoTurno = document.getElementById('infoTurno');
+
+            // Verificar si es mi turno
+            const esMiTurno = Object.keys(sala.jugadores || {}).some(jugadorId => 
+                sala.jugadores[jugadorId].nombre === miNombre && sala.jugadores[jugadorId].turno
+            );
+
+            if (esMiTurno) {
+                btnSiguiente.disabled = false;
+                btnLanzarDado.disabled = false;
+                infoTurno.textContent = "🎯 ¡Es tu turno! Responde la pregunta.";
+                document.getElementById('preguntaContainer').classList.add('highlight');
+            } else {
+                btnSiguiente.disabled = true;
+                btnLanzarDado.disabled = true;
+                
+                // Encontrar quién tiene el turno
+                const jugadorTurno = Object.values(sala.jugadores || {}).find(j => j.turno && j.conectado !== false);
+                if (jugadorTurno) {
+                    infoTurno.textContent = `⏳ Turno de: ${jugadorTurno.nombre}`;
+                }
+                
+                document.getElementById('preguntaContainer').classList.remove('highlight');
+            }
+
+            // Si el creador puede forzar siguiente turno
+            if (esCreador && !esMiTurno) {
+                btnSiguiente.disabled = false;
+                btnSiguiente.textContent = "🔄 Forzar Siguiente Turno";
+            } else {
+                btnSiguiente.textContent = "🔄 Siguiente Turno";
+            }
+        }
+
+        // ENCONTRAR MI ID DE JUGADOR
+        function encontrarMiJugadorId() {
+            database.ref('salas/' + codigoSala + '/jugadores').once('value')
+                .then(snapshot => {
+                    const jugadores = snapshot.val();
+                    Object.keys(jugadores).forEach(jugadorId => {
+                        if (jugadores[jugadorId].nombre === miNombre) {
+                            miJugadorId = jugadorId;
+                        }
+                    });
+                });
+        }
+
+        // CARGAR PREGUNTAS
+        function cargarPreguntas() {
+            preguntas = bancoPreguntas[topicoActual] || bancoPreguntas.que;
+            preguntas = mezclarArray([...preguntas]);
+        }
+
+        // ✅ CORREGIDO: SIGUIENTE TURNO QUE SALTA JUGADORES DESCONECTADOS
+        function siguienteTurno() {
+            database.ref('salas/' + codigoSala).once('value')
+                .then(snapshot => {
+                    const sala = snapshot.val();
+                    let jugadores = Object.values(sala.jugadores || {});
+                    const jugadoresIds = Object.keys(sala.jugadores || {});
+                    
+                    if (jugadores.length === 0) return;
+
+                    // ✅ FILTRAR JUGADORES DESCONECTADOS
+                    const jugadoresConectados = jugadores.filter(j => j.conectado !== false);
+                    const jugadoresConectadosIds = jugadoresIds.filter((id, index) => 
+                        jugadores[index].conectado !== false
+                    );
+
+                    if (jugadoresConectados.length === 0) {
+                        alert('Todos los jugadores se han desconectado. La sala se cerrará.');
+                        database.ref('salas/' + codigoSala).remove();
+                        window.location.href = 'https://hemirangel-png.github.io/saladejuegos/index.html';
+                        return;
+                    }
+
+                    // Encontrar jugador actual
+                    const turnoActualIndex = jugadoresConectados.findIndex(j => j.turno);
+                    let siguienteIndex = (turnoActualIndex + 1) % jugadoresConectados.length;
+
+                    // Obtener siguiente pregunta
+                    if (preguntaIndex >= preguntas.length) {
+                        preguntaIndex = 0;
+                        preguntas = mezclarArray([...preguntas]);
+                    }
+                    const siguientePregunta = preguntas[preguntaIndex];
+                    preguntaIndex++;
+
+                    // ✅ ACTUALIZAR SOLO JUGADORES CONECTADOS
+                    const updates = {};
+                    jugadoresConectadosIds.forEach((jugadorId, index) => {
+                        updates[`jugadores/${jugadorId}/turno`] = (index === siguienteIndex);
+                    });
+                    updates['preguntaActual'] = siguientePregunta;
+                    updates['estado'] = 'jugando';
+
+                    return database.ref('salas/' + codigoSala).update(updates);
+                })
+                .catch(error => {
+                    console.error('Error en siguiente turno:', error);
+                });
+        }
+
+        // LANZAR DADO
+        function lanzarDado() {
+            const btnDado = document.getElementById('btnLanzarDado');
+            btnDado.classList.add('dice-pulse');
+            
+            // Mezclar preguntas
+            preguntas = mezclarArray([...preguntas]);
+            preguntaIndex = 0;
+            
+            // Obtener nueva pregunta aleatoria
+            const nuevaPregunta = preguntas[0];
+            preguntaIndex++;
+
+            // Actualizar en Firebase
+            database.ref('salas/' + codigoSala).update({
+                preguntaActual: nuevaPregunta
+            });
+
+            setTimeout(() => {
+                btnDado.classList.remove('dice-pulse');
+            }, 400);
+        }
+
+        // ✅ CORREGIDO: SALIR DE SALA SIN MATARLA
+        function salirDeSala() {
+            if (confirm('¿Estás seguro de que quieres salir de la sala?')) {
+                if (miJugadorId) {
+                    database.ref('salas/' + codigoSala).once('value')
+                        .then(snapshot => {
+                            const sala = snapshot.val();
+                            const jugadores = sala.jugadores;
+                            const jugadoresIds = Object.keys(jugadores);
+                            
+                            // ✅ SI SOY EL CREADOR Y HAY MÁS JUGADORES
+                            if (esCreador && jugadoresIds.length > 1) {
+                                // Encontrar siguiente jugador para transferir creación
+                                const jugadoresArray = Object.values(jugadores);
+                                const siguienteJugadorIndex = (jugadoresArray.findIndex(j => j.nombre === miNombre) + 1) % jugadoresArray.length;
+                                const siguienteJugadorId = jugadoresIds[siguienteJugadorIndex];
+                                
+                                const updates = {};
+                                updates[`jugadores/${siguienteJugadorId}/esCreador`] = true;
+                                updates[`jugadores/${miJugadorId}/conectado`] = false; // Marcar como desconectado
+                                
+                                return database.ref('salas/' + codigoSala).update(updates);
+                            } 
+                            // ✅ SI SOY EL ÚLTIMO JUGADOR
+                            else if (jugadoresIds.length === 1) {
+                                // Eliminar toda la sala
+                                return database.ref('salas/' + codigoSala).remove();
+                            }
+                            // ✅ SI SOY JUGADOR NORMAL
+                            else {
+                                // Solo marcar como desconectado
+                                return database.ref('salas/' + codigoSala + '/jugadores/' + miJugadorId).update({
+                                    conectado: false
+                                });
+                            }
+                        })
+                        .then(() => {
+                            localStorage.removeItem('salaActual');
+                            window.location.href = 'https://hemirangel-png.github.io/saladejuegos/index.html';
+                        })
+                        .catch(error => {
+                            console.error('Error saliendo de sala:', error);
+                        });
+                } else {
+                    localStorage.removeItem('salaActual');
+                    window.location.href = 'https://hemirangel-png.github.io/saladejuegos/index.html';
+                }
+            }
+        }
+
+        // MEZCLAR ARRAY
+        function mezclarArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // INICIALIZAR AL CARGAR
+        document.addEventListener('DOMContentLoaded', inicializarSala);
+
+        // TECLAS RÁPIDAS
+        document.addEventListener('keydown', function(e) {
+            const btnSiguiente = document.getElementById('btnSiguiente');
+            const btnDado = document.getElementById('btnLanzarDado');
+            
+            if ((e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') && !btnSiguiente.disabled) {
+                siguienteTurno();
+            } else if ((e.key === 'd' || e.key === 'D') && !btnDado.disabled) {
+                lanzarDado();
+            } else if (e.key === 'Escape') {
+                salirDeSala();
+            }
+        });
+
+        // AL CERRAR LA PÁGINA
+        window.addEventListener('beforeunload', function() {
+            if (miJugadorId) {
+                database.ref('salas/' + codigoSala + '/jugadores/' + miJugadorId).update({
+                    conectado: false
+                });
+            }
+        });
+    </script>
+</body>
+</html>
