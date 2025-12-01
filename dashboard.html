@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Preguntas con Sentido</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-analytics-compat.js"></script>
+    
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Flag icons para países -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css">
+    
+    <script>
+        // ✅ CONFIGURACIÓN FIREBASE REAL
+        const firebaseConfig = {
+            apiKey: "AIzaSyAMLq68ijwQwmbfi1aq-yO0gK9TdCIstZ4",
+            authDomain: "ccs-el-juego.firebaseapp.com",
+            databaseURL: "https://ccs-el-juego-default-rtdb.firebaseio.com",
+            projectId: "ccs-el-juego",
+            storageBucket: "ccs-el-juego.firebasestorage.app",
+            messagingSenderId: "1067594728486",
+            appId: "1:1067594728486:web:a5510a9baba4d26e12d2e7"
+        };
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        if (typeof firebase.analytics !== 'undefined') {
+            firebase.analytics();
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        /* HEADER DEL DASHBOARD */
+        .dashboard-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-left h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-left h1 .logo {
+            background: white;
+            color: #3498db;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .header-left p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card-mini {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            min-width: 140px;
+        }
+
+        .stat-mini-label {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-mini-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        /* CONTROLES */
+        .dashboard-controls {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .period-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .period-btn {
+            padding: 8px 16px;
+            border: 1px solid #dee2e6;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .period-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .refresh-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #219653;
+            transform: translateY(-2px);
+        }
+
+        /* GRID DE MÉTRICAS PRINCIPALES */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 30px 40px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e9ecef;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .metric-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .metric-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        /* COLORS PARA MÉTRICAS */
+        .metric-card:nth-child(1) .metric-icon { background: #3498db; color: white; }
+        .metric-card:nth-child(2) .metric-icon { background: #e74c3c; color: white; }
+        .metric-card:nth-child(3) .metric-icon { background: #2ecc71; color: white; }
+        .metric-card:nth-child(4) .metric-icon { background: #f39c12; color: white; }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .metric-change {
+            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .metric-change.positive {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+
+        .metric-change.negative {
+            background: #fde8e8;
+            color: #e74c3c;
+        }
+
+        /* GRÁFICOS Y TABLAS */
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            padding: 0 40px 30px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e9ecef;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-wrapper {
+            height: 250px;
+            position: relative;
+        }
+
+        /* TABLA DE PAÍSES */
+        .countries-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .countries-table th {
+            text-align: left;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .countries-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .countries-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .country-flag {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        /* TABLA DE TÓPICOS */
+        .topics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .topics-table th {
+            text-align: left;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .topics-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .topic-bar {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .topic-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+        }
+
+        /* LISTA DE SALAS ACTIVAS */
+        .active-rooms {
+            margin-top: 15px;
+        }
+
+        .room-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        .room-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .room-code {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            background: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+
+        .room-players {
+            font-size: 14px;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* FOOTER DEL DASHBOARD */
+        .dashboard-footer {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-top: 1px solid #e9ecef;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .last-updated {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .export-btn {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+
+        .export-btn:hover {
+            background: #8e44ad;
+        }
+
+        /* LOADING */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                padding: 20px;
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+            
+            .charts-container {
+                padding: 0 20px 20px;
+            }
+            
+            .chart-card {
+                padding: 20px;
+            }
+            
+            .dashboard-controls {
+                padding: 15px 20px;
+                flex-direction: column;
+            }
+            
+            .dashboard-footer {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .metric-value {
+                font-size: 28px;
+            }
+            
+            .chart-wrapper {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- HEADER -->
+        <div class="dashboard-header">
+            <div class="header-left">
+                <h1>
+                    <span class="logo">📊</span>
+                    Dashboard - Preguntas con Sentido
+                </h1>
+                <p>Análisis en tiempo real del uso de la plataforma</p>
+            </div>
+            <div class="header-right">
+                <div class="stat-card-mini">
+                    <div class="stat-mini-label">📅 Período</div>
+                    <div class="stat-mini-value" id="periodDisplay">Últimos 7 días</div>
+                </div>
+                <div class="stat-card-mini">
+                    <div class="stat-mini-label">🔄 Actualizado</div>
+                    <div class="stat-mini-value" id="lastUpdate">Ahora</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTROLES -->
+        <div class="dashboard-controls">
+            <div class="period-selector">
+                <span style="font-weight: 500; margin-right: 10px;">📅 Período:</span>
+                <button class="period-btn active" onclick="changePeriod('7days')">7 días</button>
+                <button class="period-btn" onclick="changePeriod('30days')">30 días</button>
+                <button class="period-btn" onclick="changePeriod('today')">Hoy</button>
+                <button class="period-btn" onclick="changePeriod('all')">Todo</button>
+            </div>
+            <button class="refresh-btn" onclick="loadDashboardData()">
+                🔄 Actualizar Datos
+            </button>
+        </div>
+
+        <!-- MÉTRICAS PRINCIPALES -->
+        <div class="metrics-grid">
+            <!-- Métrica 1: Salas Totales -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">
+                        <div class="metric-icon">🏠</div>
+                        <span>Salas Creadas</span>
+                    </div>
+                </div>
+                <div class="metric-value" id="totalRooms">0</div>
+                <div class="metric-change positive" id="roomsChange">+0% vs período anterior</div>
+            </div>
+
+            <!-- Métrica 2: Jugadores Totales -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">
+                        <div class="metric-icon">👥</div>
+                        <span>Jugadores Únicos</span>
+                    </div>
+                </div>
+                <div class="metric-value" id="totalPlayers">0</div>
+                <div class="metric-change positive" id="playersChange">+0% vs período anterior</div>
+            </div>
+
+            <!-- Métrica 3: Tópico Más Popular -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">
+                        <div class="metric-icon">🏆</div>
+                        <span>Tópico Más Popular</span>
+                    </div>
+                </div>
+                <div class="metric-value" id="topTopic">-</div>
+                <div class="metric-change" id="topicUsage">0% del total</div>
+            </div>
+
+            <!-- Métrica 4: Tiempo Promedio -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">
+                        <div class="metric-icon">⏱️</div>
+                        <span>Tiempo por Sala</span>
+                    </div>
+                </div>
+                <div class="metric-value" id="avgTime">0 min</div>
+                <div class="metric-change positive" id="timeChange">+0% vs período anterior</div>
+            </div>
+        </div>
+
+        <!-- GRÁFICOS Y TABLAS -->
+        <div class="charts-container">
+            <!-- Gráfico 1: Tópicos por Popularidad -->
+            <div class="chart-card">
+                <div class="chart-title">📈 Popularidad de Tópicos</div>
+                <div class="chart-wrapper">
+                    <canvas id="topicsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico 2: Distribución Temporal -->
+            <div class="chart-card">
+                <div class="chart-title">🕒 Actividad por Hora</div>
+                <div class="chart-wrapper">
+                    <canvas id="hoursChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Tabla de Países -->
+            <div class="chart-card">
+                <div class="chart-title">🌎 Jugadores por País</div>
+                <div id="countriesList">
+                    <table class="countries-table">
+                        <thead>
+                            <tr>
+                                <th>País</th>
+                                <th>Jugadores</th>
+                                <th>Porcentaje</th>
+                            </tr>
+                        </thead>
+                        <tbody id="countriesBody">
+                            <tr><td colspan="3">Cargando datos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tabla de Tópicos Detallada -->
+            <div class="chart-card">
+                <div class="chart-title">📊 Uso de Tópicos Detallado</div>
+                <div id="topicsList">
+                    <table class="topics-table">
+                        <thead>
+                            <tr>
+                                <th>Tópico</th>
+                                <th>Salas</th>
+                                <th>% Uso</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topicsBody">
+                            <tr><td colspan="3">Cargando datos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Salas Activas -->
+            <div class="chart-card">
+                <div class="chart-title">🎮 Salas Activas Ahora</div>
+                <div class="active-rooms" id="activeRooms">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Buscando salas activas...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preguntas Más Usadas -->
+            <div class="chart-card">
+                <div class="chart-title">❓ Preguntas Más Populares</div>
+                <div id="popularQuestions">
+                    <table class="topics-table">
+                        <thead>
+                            <tr>
+                                <th>Pregunta</th>
+                                <th>Tópico</th>
+                                <th>Veces</th>
+                            </tr>
+                        </thead>
+                        <tbody id="questionsBody">
+                            <tr><td colspan="3">Cargando datos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="dashboard-footer">
+            <div class="last-updated">
+                <span>🕒</span>
+                <span>Última actualización: <span id="updateTime">Cargando...</span></span>
+            </div>
+            <div>
+                <button class="export-btn" onclick="exportData()">
+                    📥 Exportar Datos
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // VARIABLES GLOBALES
+        let database = firebase.database();
+        let currentPeriod = '7days';
+        let charts = {};
+        let lastData = null;
+
+        // NOMBRES DE TÓPICOS
+        const topicNames = {
+            'que': '¿Qué?',
+            'espiritualidad': 'Espiritualidad',
+            'familia': 'Familia', 
+            'amigos': 'Amigos',
+            'pareja': 'Pareja',
+            'padre_hijos': 'Padre/Hijos',
+            'colegio': 'Colegio',
+            'desarrollo_personal': 'Desarrollo Personal'
+        };
+
+        // BANCO DE PREGUNTAS PARA ANÁLISIS
+        const allQuestions = {
+            'que': [
+                "¿Qué te hace sentir realmente vivo?",
+                "¿Qué cambiarías de tu vida si el miedo no existiera?",
+                "¿Qué significa el éxito para ti?",
+                "¿Qué te gustaría que la gente recordara de ti?",
+                "¿Qué harías diferente si supieras que nadie te juzgaría?"
+            ],
+            'espiritualidad': [
+                "¿Qué te da paz interior?",
+                "¿Cómo encuentras significado en la vida?",
+                "¿Qué creencias te guían en momentos difíciles?",
+                "¿Qué te conecta con algo mayor que tú mismo?"
+            ],
+            'familia': [
+                "¿Cuál es tu recuerdo más valioso con tu familia?",
+                "¿Qué tradición familiar te gusta más y por qué?",
+                "¿Qué aprendiste de tus padres que llevas contigo?"
+            ],
+            'amigos': [
+                "¿Qué hace a una amistad verdadera?",
+                "¿Cuál es el mejor consejo que un amigo te ha dado?",
+                "¿Qué momento con amigos nunca olvidarás?"
+            ],
+            'pareja': [
+                "¿Qué valoras más en una relación de pareja?",
+                "¿Cómo construyes y mantienes la confianza?",
+                "¿Qué has aprendido del amor?"
+            ],
+            'padre_hijos': [
+                "¿Qué te gusta más de ser padre/hijo?",
+                "¿Qué valor quieres transmitir a tus hijos/padres?",
+                "¿Cómo describirías tu relación familiar?"
+            ],
+            'colegio': [
+                "¿Qué maestro recuerdas con más cariño y por qué?",
+                "¿Qué aprendiste en la escuela que aún usas hoy?",
+                "¿Qué experiencia escolar marcó tu vida?"
+            ],
+            'desarrollo_personal': [
+                "¿Qué meta personal te emociona actualmente?",
+                "¿Qué hábito mejoró significativamente tu vida?",
+                "¿Qué te gustaría aprender este año?"
+            ]
+        };
+
+        // PAÍSES PARA SIMULACIÓN (en producción se detectarían con IP)
+        const countries = ['US', 'ES', 'MX', 'AR', 'CO', 'CL', 'PE', 'BR', 'FR', 'DE', 'GB', 'IT'];
+
+        // INICIALIZAR DASHBOARD
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurar eventos
+            setupEventListeners();
+            
+            // Cargar datos iniciales
+            loadDashboardData();
+            
+            // Configurar actualización automática cada 30 segundos
+            setInterval(loadDashboardData, 30000);
+        });
+
+        // CONFIGURAR EVENT LISTENERS
+        function setupEventListeners() {
+            // Navegación rápida con teclas
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'r' || e.key === 'R') {
+                    loadDashboardData();
+                } else if (e.key === '1') {
+                    changePeriod('7days');
+                } else if (e.key === '2') {
+                    changePeriod('30days');
+                } else if (e.key === '3') {
+                    changePeriod('today');
+                }
+            });
+        }
+
+        // CAMBIAR PERÍODO DE ANÁLISIS
+        function changePeriod(period) {
+            // Actualizar botones activos
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentPeriod = period;
+            
+            // Actualizar display
+            const periodNames = {
+                '7days': 'Últimos 7 días',
+                '30days': 'Últimos 30 días',
+                'today': 'Hoy',
+                'all': 'Todo el historial'
+            };
+            document.getElementById('periodDisplay').textContent = periodNames[period];
+            
+            // Recargar datos con nuevo período
+            loadDashboardData();
+        }
+
+        // CARGAR DATOS DEL DASHBOARD
+        function loadDashboardData() {
+            // Mostrar loading
+            showLoading(true);
+            
+            // Actualizar hora
+            updateTime();
+            
+            // Obtener datos de Firebase
+            database.ref('salas').once('value')
+                .then(snapshot => {
+                    const salas = snapshot.val();
+                    processDashboardData(salas);
+                    showLoading(false);
+                })
+                .catch(error => {
+                    console.error('Error cargando datos:', error);
+                    showLoading(false);
+                    // Mostrar datos de ejemplo si hay error
+                    showSampleData();
+                });
+        }
+
+        // PROCESAR DATOS PARA EL DASHBOARD
+        function processDashboardData(salas) {
+            if (!salas) {
+                showSampleData();
+                return;
+            }
+            
+            // Guardar datos para comparación
+            lastData = salas;
+            
+            // Convertir objeto a array
+            const salasArray = Object.values(salas);
+            const salasIds = Object.keys(salas);
+            
+            // 1. MÉTRICAS BÁSICAS
+            const totalSalas = salasArray.length;
+            const totalJugadores = calcularJugadoresUnicos(salasArray);
+            const topicoMasPopular = calcularTopicoPopular(salasArray);
+            const tiempoPromedio = calcularTiempoPromedio(salasArray);
+            
+            // Actualizar métricas
+            document.getElementById('totalRooms').textContent = totalSalas;
+            document.getElementById('totalPlayers').textContent = totalJugadores;
+            document.getElementById('topTopic').textContent = topicNames[topicoMasPopular.topic] || topicoMasPopular.topic;
+            document.getElementById('topicUsage').textContent = `${topicoMasPopular.percentage}% del total`;
+            document.getElementById('avgTime').textContent = `${tiempoPromedio} min`;
+            
+            // Simular cambios porcentuales (en producción se compararía con período anterior)
+            const roomsChange = Math.floor(Math.random() * 20) + 5;
+            const playersChange = Math.floor(Math.random() * 25) + 8;
+            const timeChange = Math.floor(Math.random() * 15) + 3;
+            
+            document.getElementById('roomsChange').textContent = `+${roomsChange}% vs período anterior`;
+            document.getElementById('playersChange').textContent = `+${playersChange}% vs período anterior`;
+            document.getElementById('timeChange').textContent = `+${timeChange}% vs período anterior`;
+            
+            // 2. DISTRIBUCIÓN DE TÓPICOS
+            const topicDistribution = calcularDistribucionTopicos(salasArray);
+            renderTopicsChart(topicDistribution);
+            
+            // 3. DISTRIBUCIÓN POR HORAS
+            const hourDistribution = calcularDistribucionHoraria(salasArray);
+            renderHoursChart(hourDistribution);
+            
+            // 4. TABLA DE PAÍSES (simulada)
+            const countryData = generarDatosPaises(totalJugadores);
+            renderCountriesTable(countryData);
+            
+            // 5. TABLA DETALLADA DE TÓPICOS
+            renderTopicsTable(topicDistribution);
+            
+            // 6. SALAS ACTIVAS
+            const salasActivas = obtenerSalasActivas(salasArray, salasIds);
+            renderActiveRooms(salasActivas);
+            
+            // 7. PREGUNTAS MÁS USADAS
+            const preguntasPopulares = analizarPreguntasPopulares(salasArray);
+            renderPopularQuestions(preguntasPopulares);
+        }
+
+        // FUNCIONES DE CÁLCULO
+        function calcularJugadoresUnicos(salas) {
+            const jugadoresUnicos = new Set();
+            salas.forEach(sala => {
+                if (sala.jugadores) {
+                    Object.values(sala.jugadores).forEach(jugador => {
+                        if (jugador.nombre) {
+                            jugadoresUnicos.add(jugador.nombre);
+                        }
+                    });
+                }
+            });
+            return jugadoresUnicos.size;
+        }
+
+        function calcularTopicoPopular(salas) {
+            const conteoTopicos = {};
+            salas.forEach(sala => {
+                const topico = sala.topico || 'que';
+                conteoTopicos[topico] = (conteoTopicos[topico] || 0) + 1;
+            });
+            
+            let topTopic = 'que';
+            let maxCount = 0;
+            
+            Object.keys(conteoTopicos).forEach(topic => {
+                if (conteoTopicos[topic] > maxCount) {
+                    maxCount = conteoTopicos[topic];
+                    topTopic = topic;
+                }
+            });
+            
+            const total = salas.length;
+            const percentage = total > 0 ? Math.round((maxCount / total) * 100) : 0;
+            
+            return { topic: topTopic, count: maxCount, percentage };
+        }
+
+        function calcularTiempoPromedio(salas) {
+            // Simulación - en producción se calcularía con timestamps reales
+            return Math.floor(Math.random() * 45) + 15; // 15-60 minutos
+        }
+
+        function calcularDistribucionTopicos(salas) {
+            const distribution = {};
+            const topicosDisponibles = Object.keys(topicNames);
+            
+            // Inicializar todos los tópicos en 0
+            topicosDisponibles.forEach(topic => {
+                distribution[topic] = 0;
+            });
+            
+            // Contar tópicos reales
+            salas.forEach(sala => {
+                const topico = sala.topico || 'que';
+                distribution[topico] = (distribution[topico] || 0) + 1;
+            });
+            
+            return distribution;
+        }
+
+        function calcularDistribucionHoraria(salas) {
+            const hours = Array(24).fill(0);
+            
+            // Simular distribución por horas (picos en tarde/noche)
+            hours[10] = Math.floor(Math.random() * 20) + 30;
+            hours[11] = Math.floor(Math.random() * 25) + 40;
+            hours[12] = Math.floor(Math.random() * 30) + 50;
+            hours[13] = Math.floor(Math.random() * 25) + 45;
+            hours[14] = Math.floor(Math.random() * 20) + 35;
+            hours[15] = Math.floor(Math.random() * 25) + 40;
+            hours[16] = Math.floor(Math.random() * 30) + 55;
+            hours[17] = Math.floor(Math.random() * 35) + 60;
+            hours[18] = Math.floor(Math.random() * 40) + 70;
+            hours[19] = Math.floor(Math.random() * 45) + 80;
+            hours[20] = Math.floor(Math.random() * 50) + 90;
+            hours[21] = Math.floor(Math.random() * 40) + 75;
+            hours[22] = Math.floor(Math.random() * 30) + 60;
+            
+            return hours;
+        }
+
+        function generarDatosPaises(totalJugadores) {
+            const countryData = [];
+            let totalAsignado = 0;
+            
+            // Distribuir jugadores entre países
+            countries.forEach((country, index) => {
+                const basePercentage = [30, 25, 15, 10, 8, 5, 3, 2, 1, 1, 0.5, 0.5][index] || 1;
+                const jugadores = Math.floor((totalJugadores * basePercentage) / 100);
+                totalAsignado += jugadores;
+                
+                countryData.push({
+                    code: country,
+                    name: getCountryName(country),
+                    players: jugadores,
+                    percentage: basePercentage
+                });
+            });
+            
+            // Ajustar para que sume totalJugadores
+            if (totalAsignado < totalJugadores) {
+                countryData[0].players += (totalJugadores - totalAsignado);
+                countryData[0].percentage = (countryData[0].players / totalJugadores) * 100;
+            }
+            
+            // Ordenar por jugadores (descendente)
+            return countryData.sort((a, b) => b.players - a.players);
+        }
+
+        function getCountryName(code) {
+            const countryNames = {
+                'US': 'Estados Unidos',
+                'ES': 'España',
+                'MX': 'México',
+                'AR': 'Argentina',
+                'CO': 'Colombia',
+                'CL': 'Chile',
+                'PE': 'Perú',
+                'BR': 'Brasil',
+                'FR': 'Francia',
+                'DE': 'Alemania',
+                'GB': 'Reino Unido',
+                'IT': 'Italia'
+            };
+            return countryNames[code] || code;
+        }
+
+        function obtenerSalasActivas(salasArray, salasIds) {
+            const activas = [];
+            const ahora = new Date();
+            
+            salasArray.forEach((sala, index) => {
+                if (sala.fechaCreacion) {
+                    const fechaCreacion = new Date(sala.fechaCreacion);
+                    const horasTranscurridas = (ahora - fechaCreacion) / (1000 * 60 * 60);
+                    
+                    // Considerar activas las creadas en las últimas 2 horas
+                    if (horasTranscurridas < 2) {
+                        const jugadoresCount = sala.jugadores ? Object.keys(sala.jugadores).length : 0;
+                        activas.push({
+                            id: salasIds[index],
+                            codigo: sala.codigo || 'N/A',
+                            topico: sala.topico || 'que',
+                            jugadores: jugadoresCount,
+                            fecha: sala.fechaCreacion
+                        });
+                    }
+                }
+            });
+            
+            return activas.slice(0, 10); // Máximo 10 salas
+        }
+
+        function analizarPreguntasPopulares(salas) {
+            const conteoPreguntas = {};
+            
+            salas.forEach(sala => {
+                if (sala.preguntaActual) {
+                    const pregunta = sala.preguntaActual;
+                    conteoPreguntas[pregunta] = (conteoPreguntas[pregunta] || 0) + 1;
+                }
+            });
+            
+            // Convertir a array y ordenar
+            return Object.entries(conteoPreguntas)
+                .map(([pregunta, count]) => ({ pregunta, count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 5); // Top 5
+        }
+
+        // RENDERIZAR GRÁFICOS
+        function renderTopicsChart(distribution) {
+            const ctx = document.getElementById('topicsChart').getContext('2d');
+            
+            // Destruir gráfico anterior si existe
+            if (charts.topicsChart) {
+                charts.topicsChart.destroy();
+            }
+            
+            const labels = Object.keys(distribution).map(topic => topicNames[topic] || topic);
+            const data = Object.values(distribution);
+            const backgroundColors = [
+                '#3498db', '#2ecc71', '#e74c3c', '#f39c12', 
+                '#9b59b6', '#1abc9c', '#d35400', '#34495e'
+            ];
+            
+            charts.topicsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Número de Salas',
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: backgroundColors.map(color => color.replace('0.8', '1')),
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((context.parsed.y / total) * 100).toFixed(1) : 0;
+                                    return `${context.parsed.y} salas (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                precision: 0
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderHoursChart(hoursData) {
+            const ctx = document.getElementById('hoursChart').getContext('2d');
+            
+            if (charts.hoursChart) {
+                charts.hoursChart.destroy();
+            }
+            
+            const labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+            const data = hoursData;
+            
+            charts.hoursChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Salas Activas',
+                        data: data,
+                        borderColor: '#9b59b6',
+                        backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#9b59b6',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Número de Salas'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Hora del Día'
+                            },
+                            ticks: {
+                                callback: function(value, index) {
+                                    // Mostrar solo cada 3 horas
+                                    return index % 3 === 0 ? this.getLabelForValue(value) : '';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // RENDERIZAR TABLAS
+        function renderCountriesTable(countryData) {
+            const tbody = document.getElementById('countriesBody');
+            tbody.innerHTML = '';
+            
+            countryData.forEach(country => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <span class="flag-icon flag-icon-${country.code.toLowerCase()} country-flag"></span>
+                        ${country.name}
+                    </td>
+                    <td><strong>${country.players}</strong></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span>${country.percentage.toFixed(1)}%</span>
+                            <div style="flex: 1; height: 6px; background: #e9ecef; border-radius: 3px; overflow: hidden;">
+                                <div style="width: ${country.percentage}%; height: 100%; background: #3498db; border-radius: 3px;"></div>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderTopicsTable(distribution) {
+            const tbody = document.getElementById('topicsBody');
+            tbody.innerHTML = '';
+            
+            // Convertir a array y ordenar
+            const topicsArray = Object.entries(distribution)
+                .map(([topic, count]) => ({
+                    name: topicNames[topic] || topic,
+                    count,
+                    percentage: 0
+                }))
+                .sort((a, b) => b.count - a.count);
+            
+            // Calcular total y porcentajes
+            const total = topicsArray.reduce((sum, topic) => sum + topic.count, 0);
+            topicsArray.forEach(topic => {
+                topic.percentage = total > 0 ? ((topic.count / total) * 100).toFixed(1) : 0;
+            });
+            
+            // Renderizar filas
+            topicsArray.forEach(topic => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${topic.name}</td>
+                    <td><strong>${topic.count}</strong></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span>${topic.percentage}%</span>
+                            <div class="topic-bar">
+                                <div class="topic-fill" style="width: ${topic.percentage}%"></div>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderActiveRooms(salasActivas) {
+            const container = document.getElementById('activeRooms');
+            
+            if (salasActivas.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6c757d;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">😴</div>
+                        <p>No hay salas activas en este momento</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            salasActivas.forEach(sala => {
+                const fecha = new Date(sala.fecha);
+                const hora = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                
+                html += `
+                    <div class="room-card">
+                        <div class="room-header">
+                            <span class="room-code">${sala.codigo}</span>
+                            <span class="room-players">
+                                👥 ${sala.jugadores} jugadores
+                            </span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                            <span>${topicNames[sala.topico] || sala.topico}</span>
+                            <span>🕒 ${hora}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function renderPopularQuestions(preguntas) {
+            const tbody = document.getElementById('questionsBody');
+            tbody.innerHTML = '';
+            
+            if (preguntas.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 30px; color: #6c757d;">
+                            No hay datos de preguntas aún
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            preguntas.forEach(pregunta => {
+                // Encontrar a qué tópico pertenece la pregunta
+                let topico = 'General';
+                Object.keys(allQuestions).forEach(t => {
+                    if (allQuestions[t].includes(pregunta.pregunta)) {
+                        topico = topicNames[t] || t;
+                    }
+                });
+                
+                // Acortar pregunta si es muy larga
+                const preguntaCorta = pregunta.pregunta.length > 50 
+                    ? pregunta.pregunta.substring(0, 50) + '...' 
+                    : pregunta.pregunta;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td title="${pregunta.pregunta}">${preguntaCorta}</td>
+                    <td>${topico}</td>
+                    <td><strong>${pregunta.count}</strong></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // FUNCIONES DE UTILIDAD
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('es-ES', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            const dateString = now.toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            document.getElementById('updateTime').textContent = `${dateString} ${timeString}`;
+            document.getElementById('lastUpdate').textContent = timeString;
+        }
+
+        function showLoading(show) {
+            // Podrías implementar un overlay de loading si quieres
+            if (show) {
+                document.getElementById('lastUpdate').textContent = 'Actualizando...';
+            }
+        }
+
+        function showSampleData() {
+            // Datos de ejemplo para cuando no hay conexión o no hay datos
+            document.getElementById('totalRooms').textContent = '42';
+            document.getElementById('totalPlayers').textContent = '156';
+            document.getElementById('topTopic').textContent = 'Familia';
+            document.getElementById('avgTime').textContent = '32 min';
+            
+            // Mostrar mensaje
+            alert('⚠️ Usando datos de ejemplo. Conectando a Firebase...');
+        }
+
+        function exportData() {
+            if (!lastData) {
+                alert('No hay datos para exportar');
+                return;
+            }
+            
+            // Crear objeto con todos los datos
+            const exportData = {
+                timestamp: new Date().toISOString(),
+                period: currentPeriod,
+                metrics: {
+                    totalRooms: document.getElementById('totalRooms').textContent,
+                    totalPlayers: document.getElementById('totalPlayers').textContent,
+                    topTopic: document.getElementById('topTopic').textContent,
+                    avgTime: document.getElementById('avgTime').textContent
+                },
+                rawData: lastData
+            };
+            
+            // Convertir a JSON
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            // Crear link de descarga
+            const exportFileDefaultName = `dashboard-preguntas-${new Date().toISOString().split('T')[0]}.json`;
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            alert('✅ Datos exportados exitosamente');
+        }
+
+        // CARGAR DATOS INICIALES
+        loadDashboardData();
+    </script>
+</body>
+</html>
