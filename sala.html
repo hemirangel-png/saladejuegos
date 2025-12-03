@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sala de Juego - Conversaciones con Sentido</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script>
+        // ✅ TU CONFIGURACIÓN FIREBASE REAL
+        const firebaseConfig = {
+            apiKey: "AIzaSyAMLq68ijwQwmbfi1aq-yO0gK9TdCIstZ4",
+            authDomain: "ccs-el-juego.firebaseapp.com",
+            databaseURL: "https://ccs-el-juego-default-rtdb.firebaseio.com",
+            projectId: "ccs-el-juego",
+            storageBucket: "ccs-el-juego.firebasestorage.app",
+            messagingSenderId: "1067594728486",
+            appId: "1:1067594728486:web:a5510a9baba4d26e12d2e7"
+        };
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        /* ✅ FONDO FIJO MEJORADO - SIN SALTOS EN MÓVIL */
+        body {
+            min-height: 100vh;
+            color: white;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* ✅ NUEVO: Fondo usando pseudo-elemento en lugar de div separado */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: scroll; /* Importante para móviles */
+            z-index: -1;
+            /* Prevenir parpadeo en iOS */
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 1;
+            position: relative; /* Para asegurar que esté encima del fondo */
+        }
+
+        /* HEADER MEJORADO CON BOTONES - MODIFICADO */
+        .header {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px;
+            border-radius: 10px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+            min-height: 70px; /* Reducido ya que no mostraremos el jugador */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .topico-titulo-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 6px; /* Ajustado */
+        }
+
+        .sala-info {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .codigo-sala-small {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px; /* Aumentado ligeramente */
+            border-radius: 4px;
+        }
+
+        /* BOTONES HEADER AGRANDADOS - MODIFICADO */
+        .botones-header {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        .btn-header {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            min-height: 28px;
+        }
+
+        .btn-header:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-header.copiado {
+            background: rgba(39, 174, 96, 0.3);
+            border-color: #27ae60;
+        }
+
+        /* TARJETA DE PREGUNTA PRINCIPAL */
+        .pregunta-container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .pregunta-texto {
+            font-size: 22px;
+            font-weight: 600;
+            line-height: 1.4;
+            padding: 10px;
+        }
+
+        .info-turno {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        /* BOTONES PRINCIPALES */
+        .botones-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-principal {
+            background: #D0342C;
+            color: white;
+            border: none;
+            padding: 18px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-principal:hover {
+            background: #B52A23;
+            transform: translateY(-2px);
+        }
+
+        .btn-principal:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.6;
+        }
+
+        /* NUEVO: Botón "Ver pregunta anterior" */
+        .btn-anterior {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-anterior:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-anterior:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.6;
+        }
+
+        /* MODIFICADO: Botón "Preguntas Aleatorias" */
+        .btn-aleatorio {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-aleatorio:hover {
+            background: #219653;
+            transform: translateY(-2px);
+        }
+
+        .btn-aleatorio:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.6;
+        }
+
+        /* BOTÓN VOLVER */
+        .btn-volver-inicio {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-volver-inicio:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* PANEL DE JUGADORES (MÁS PEQUEÑO Y ABAJO) */
+        .jugadores-container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px;
+            border-radius: 10px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-top: auto;
+        }
+
+        .jugadores-titulo {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .jugadores-lista {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .jugador {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 10px;
+            border-radius: 15px;
+            border: 1px solid transparent;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .jugador.turno-actual {
+            background: rgba(46, 204, 113, 0.3);
+            border-color: #27ae60;
+            transform: scale(1.05);
+        }
+
+        .jugador.tu {
+            background: rgba(52, 152, 219, 0.3);
+            border-color: #3498db;
+        }
+
+        .jugador.creador::before {
+            content: "👑";
+            font-size: 10px;
+            margin-right: 2px;
+        }
+
+        .jugador.turno-actual::after {
+            content: "🎯";
+            font-size: 10px;
+            margin-left: 2px;
+        }
+
+        /* ANIMACIONES */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes gentlePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .dice-pulse {
+            animation: gentlePulse 0.4s ease;
+        }
+
+        @keyframes highlight {
+            0% { background: rgba(46, 204, 113, 0.5); }
+            100% { background: rgba(46, 204, 113, 0.3); }
+        }
+
+        .highlight {
+            animation: highlight 1s ease;
+        }
+
+        /* PIE DE PÁGINA */
+        .footer {
+            text-align: center;
+            margin-top: 10px;
+            padding: 10px;
+        }
+
+        .website-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 12px;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+
+        .website-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        /* ✅ RESPONSIVE PARA MÓVIL */
+        @media (max-width: 768px) {
+            body::before {
+                background-attachment: scroll;
+                height: 100vh;
+                width: 100vw;
+            }
+            
+            .pregunta-container {
+                padding: 20px;
+                min-height: 180px;
+            }
+            
+            .pregunta-texto {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+                -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+            }
+            
+            .pregunta-container {
+                padding: 15px;
+                min-height: 160px;
+            }
+            
+            .pregunta-texto {
+                font-size: 18px;
+                padding: 8px;
+            }
+            
+            .btn-principal, .btn-aleatorio, .btn-anterior {
+                padding: 16px;
+            }
+            
+            body::before {
+                /* Fuerza el hardware acceleration */
+                -webkit-transform: translate3d(0, 0, 0);
+                transform: translate3d(0, 0, 0);
+            }
+        }
+        
+        /* ✅ SOLUCIÓN ESPECÍFICA PARA iOS */
+        @supports (-webkit-touch-callout: none) {
+            body::before {
+                height: -webkit-fill-available;
+                min-height: -webkit-fill-available;
+            }
+            
+            body {
+                min-height: -webkit-fill-available;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ✅ ELIMINADO: <div class="background-fixed"></div> -->
+    <!-- Ahora el fondo está en el pseudo-elemento ::before del body -->
+
+    <div class="container">
+        <!-- HEADER MEJORADO - SIMPLIFICADO -->
+        <div class="header">
+            <div class="topico-titulo-header" id="topicoTituloHeader">Cargando...</div>
+            <div class="sala-info">
+                <span>Sala:</span>
+                <span class="codigo-sala-small" id="codigoSalaSmall">---</span>
+            </div>
+            <div class="botones-header">
+                <button class="btn-header" onclick="copiarCodigoSala()" id="btnCopiarHeader">
+                    📋 Copiar
+                </button>
+                <button class="btn-header" onclick="compartirSalaDesdeHeader()">
+                    📤 Compartir
+                </button>
+            </div>
+        </div>
+
+        <!-- TARJETA DE PREGUNTA PRINCIPAL -->
+        <div class="pregunta-container fade-in" id="preguntaContainer">
+            <div class="pregunta-texto" id="preguntaTexto">
+                Cargando pregunta...
+            </div>
+            <div class="info-turno" id="infoTurno">
+                Conectando con los jugadores...
+            </div>
+        </div>
+
+        <!-- BOTONES PRINCIPALES - MODIFICADO -->
+        <div class="botones-container">
+            <button class="btn-principal" id="btnSiguiente" onclick="siguienteTurno()" disabled>
+                🔄 Siguiente Turno
+            </button>
+            
+            <!-- NUEVO: Botón "Ver pregunta anterior" -->
+            <button class="btn-anterior" id="btnPreguntaAnterior" onclick="verPreguntaAnterior()">
+                ↩️ Ver pregunta anterior
+            </button>
+            
+            <!-- MODIFICADO: Botón con nuevo texto -->
+            <button class="btn-aleatorio" id="btnPreguntasAleatorias" onclick="lanzarDado()" disabled>
+                🔀 Preguntas Aleatorias
+            </button>
+        </div>
+
+        <!-- PANEL DE JUGADORES (ABAJO Y MÁS PEQUEÑO) -->
+        <div class="jugadores-container fade-in">
+            <div class="jugadores-titulo">🎮 JUGADORES EN SALA</div>
+            <div class="jugadores-lista" id="jugadoresLista">
+                <div class="jugador">
+                    <div>Cargando...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTÓN SALIR -->
+        <button class="btn-volver-inicio" onclick="salirDeSala()">
+            ← Salir de la Sala
+        </button>
+
+        <!-- PIE DE PÁGINA -->
+        <div class="footer">
+            <a href="https://www.7preguntas.com" class="website-link" target="_blank">
+                www.7preguntas.com
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // VARIABLES GLOBALES CON FIREBASE REAL
+        let topicoActual = '';
+        let codigoSala = '';
+        let miNombre = '';
+        let esCreador = false;
+        let miJugadorId = '';
+        let preguntas = [];
+        let preguntaIndex = 0;
+        let database = firebase.database();
+        
+        // NUEVO: Variable para almacenar preguntas anteriores
+        let preguntasAnteriores = [];
+        let indicePreguntaAnterior = -1;
+
+        // BANCO DE PREGUNTAS COMPLETO (CON TODAS LAS 50 PREGUNTAS POR CATEGORÍA)
+        const bancoPreguntas = {
+            'que': [
+                "¿Qué te hace sentir realmente vivo?",
+                "¿Qué cambiarías de tu vida si el miedo no existiera?",
+                "¿Qué significa el éxito para ti?",
+                "¿Qué te gustaría que la gente recordara de ti?",
+                "¿Qué harías diferente si supieras que nadie te juzgaría?",
+                "¿Qué te impide ser completamente feliz?",
+                "¿Qué aprendiste de tu mayor fracaso?",
+                "¿Qué te gustaría crear en este mundo?",
+                "¿Qué necesitas soltar para seguir adelante?",
+                "¿Qué te gustaría entender mejor sobre ti mismo?"
+            ],
+            'espiritualidad': [
+                "¿Existe la condenación en tu creencia?",
+                "¿Cuándo fue la última vez y por qué te sentiste 'más espiritual'?",
+                "¿Cuál es la creencia que más te mueve en la vida?",
+                "¿Qué ritos sueles realizar, acciones repetitivas relacionadas con tu creencia o religión?",
+                "¿Hablas de tus creencias? ¿Por qué sí o por qué no?",
+                "¿Crees que tu religión tiene la verdad absoluta?",
+                "Después de tu religión o creencia, ¿cuál otra crees que se acerca más a la verdad?",
+                "¿Hay algún tipo de música que te conecte más con lo espiritual?",
+                "Si no fueras de la creencia o religión que tienes ahora, ¿hay alguna otra que te hubiera llamado la atención?",
+                "¿Qué aspecto de tu religión no te gusta mucho?",
+                "¿Alguna razón por la que te harías ateo o agnóstico?",
+                "¿Qué no perdonarías?",
+                "¿Dios ha respondido alguna vez tu oración?",
+                "¿Estás conforme con tu vida espiritual? Si respondes que no, explica por qué.",
+                "¿Qué piensas en esta etapa de tu vida respecto de la muerte?",
+                "¿Eres de las personas que les gusta la evolución de sus creencias, o prefieres quedarte seguro en una creencia fija y única?",
+                "¿Practicas alguna forma de oración, meditación o reflexión? ¿Cómo te ayuda?",
+                "¿Dónde o en qué situaciones te sientes más conectado espiritualmente?",
+                "¿Hay algún texto sagrado o enseñanza espiritual que te inspire?",
+                "¿Cómo reconcilias el sufrimiento en el mundo con tus creencias espirituales?",
+                "¿Qué has aprendido de tradiciones espirituales diferentes a la tuya?",
+                "¿Es posible respetar profundamente otras creencias mientras mantienes firmemente las tuyas?",
+                "¿Has tenido alguna experiencia que considerarías espiritual o trascendente?",
+                "¿Hay alguien que haya influido profundamente en tu camino espiritual?",
+                "¿Qué legado espiritual o valores te gustaría transmitir a las futuras generaciones?",
+                "¿Qué parte de tu espiritualidad es realmente tuya y qué parte es solo lo que te programaron a creer?",
+                "Si tu Dios te hablara ahora mismo, ¿qué crees que te diría que estás haciendo mal?",
+                "¿Usas tu espiritualidad como excusa para no tomar responsabilidad sobre tu vida?",
+                "¿Cuántas veces has rezado por algo y luego no hiciste absolutamente nada para que sucediera?",
+                "¿Tu fe te hace mejor persona o solo te hace sentir superior a los demás?",
+                "¿Qué contradicción entre lo que crees y lo que haces te niegas a ver?",
+                "Si no hubiera castigo divino ni recompensa celestial, ¿seguirías siendo 'buena persona'?",
+                "¿Qué pecado o falta repites constantemente mientras te perdonas a ti mismo una y otra vez?",
+                "¿Tu comunidad religiosa te eleva espiritualmente o solo te da un club social para sentirte incluido?",
+                "¿Cuánto de tu espiritualidad es búsqueda genuina y cuánto es miedo a estar equivocado?",
+                "¿Qué pregunta sobre tu fe te aterra hacerte porque podría destruir todo tu sistema de creencias?",
+                "Si tuvieras que defender tu fe ante alguien extremadamente inteligente y escéptico, ¿podrías hacerlo sin recurrir a 'simplemente tienes que creer'?",
+                "¿Qué mandamiento, ley o enseñanza de tu religión ignoras convenientemente?",
+                "¿Estás dispuesto a cambiar de creencias si se te prueba que estás equivocado, o ya cerraste tu mente?",
+                "¿Cuánto tiempo dedicas realmente a tu espiritualidad versus cuánto tiempo hablas de ella?",
+                "¿Tu espiritualidad te da paz genuina o solo te genera culpa disfrazada de humildad?",
+                "Si pudieras hacer una pregunta directa a tu concepto de divinidad y recibir respuesta clara, ¿qué preguntarías?",
+                "¿Qué milagro necesitarías presenciar para fortalecer tu fe? ¿Y eso qué dice sobre tu fe actual?",
+                "¿Juzgas más a los 'pecadores' de lo que tu religión te enseña a amar al prójimo?",
+                "¿Tu espiritualidad te hace más libre o más esclavo de reglas que ni siquiera entiendes?",
+                "Si tu hijo te dijera que no cree en nada de lo que tú crees, ¿podrías amarlo igual o lo verías como fracaso tuyo?",
+                "¿Cuántas de tus decisiones importantes las tomas basándote en tu fe versus en tu conveniencia?",
+                "¿Estás usando a Dios como terapeuta gratuito en lugar de trabajar tus problemas reales?",
+                "¿Tu vida refleja tus creencias espirituales o solo tu boca lo hace?",
+                "Si murieras hoy y hubiera un juicio final, ¿qué crees que te reprocharían más: lo que hiciste o lo que no hiciste?"
+            ],
+            'familia': [
+                "Describe tres cosas que crees que hacen a tu familia 'única'.",
+                "¿Qué dirías que es una actividad que a todos los integrantes de tu familia les gusta realizar juntos?",
+                "¿Qué actividades o ritos crees que mantendrás en tu propia familia que son parte de la actual?",
+                "Características de algún familiar que te marcó positivamente.",
+                "Si pudieras viajar a un momento en el pasado para cambiar algo, ¿a qué día volverías?",
+                "¿Cuál es tu recuerdo familiar favorito de cuando eras niño?",
+                "¿Qué tradición familiar esperas con más entusiasmo cada año?",
+                "¿Hay alguna historia familiar que te gustaría que se contara más seguido?",
+                "¿Cuál fue el mejor viaje o vacaciones que hicimos juntos?",
+                "¿Qué comida te recuerda inmediatamente a nuestra familia?",
+                "¿Qué es algo que nadie en la familia sabe sobre ti?",
+                "¿En qué miembro de la familia te ves reflejado y por qué?",
+                "¿Qué talento o habilidad de otro familiar admiras?",
+                "¿Qué es algo que nuestra familia hace mejor que otras?",
+                "¿Qué consejo le darías a alguien sobre cómo tener una familia unida?",
+                "¿Por qué miembro de la familia estás más agradecido hoy y por qué?",
+                "¿Cuándo te sentiste más apoyado por la familia?",
+                "¿Qué sacrificio has visto hacer a alguien de la familia por los demás?",
+                "¿Qué aventura te gustaría que viviéramos juntos como familia?",
+                "¿Qué tradición nueva te gustaría que comenzáramos?",
+                "¿Hay algún lugar del mundo que quisieras que visitáramos juntos?",
+                "¿Cuál ha sido el momento más difícil que hemos enfrentado como familia?",
+                "¿Hay algo que como familia deberíamos mejorar?",
+                "¿Qué obstáculo has superado gracias al apoyo familiar?",
+                "Si nuestra familia fuera un equipo de superhéroes, ¿qué poder tendría cada uno?",
+                "¿Qué película o serie representa mejor a nuestra familia?",
+                "¿Qué historia de nuestros abuelos o ancestros te parece más interesante?",
+                "¿Qué objeto familiar tiene más valor sentimental para ti?",
+                "¿Qué patrón tóxico de tu familia estás repitiendo sin darte cuenta?",
+                "¿A quién en la familia le debes una disculpa que nunca has dado?",
+                "¿Qué rol juegas en la familia que en realidad no quieres tener?",
+                "¿Cuántas veces has sacrificado tu felicidad solo para mantener la 'paz familiar'?",
+                "¿Qué secreto familiar todos conocen pero nadie habla?",
+                "¿De qué familiar te avergüenzas y por qué no tienes los huevos para admitirlo?",
+                "¿Qué herida de tu infancia familiar sigues usando como excusa para no crecer?",
+                "¿A quién en tu familia has dejado de lado porque 'no tienes tiempo'?",
+                "¿Qué tradición familiar mantienes solo por obligación y no porque realmente la valores?",
+                "¿Cuánto tiempo pasas con tu familia de calidad versus tiempo físico sin conexión real?",
+                "¿Qué le estás enseñando a tus hijos con tu ejemplo que jurarías que no quieres que aprendan?",
+                "¿Qué miembro de la familia necesita tu ayuda ahora mismo pero finges no darte cuenta?",
+                "¿Estás más preocupado por la imagen de 'familia perfecta' que por la verdadera conexión?",
+                "¿Qué conversación familiar importante sigues posponiendo porque eres cobarde?",
+                "¿Cuándo fue la última vez que le dijiste 'te amo' a tu familia y realmente lo sentiste?",
+                "¿Qué aspecto de tu personalidad heredaste de tu familia que odias pero replicas?",
+                "Si tu familia fuera brutalmente honesta contigo, ¿qué te dirían que te molesta de ti?",
+                "¿Cuántas reuniones familiares has perdido por trabajo o 'falta de tiempo' que nunca recuperarás?",
+                "¿Estás criando a tus hijos o solo estás replicando el manual de supervivencia que te dieron?",
+                "¿Qué familiar te hace daño constantemente pero sigues permitiéndolo 'porque es familia'?",
+                "¿Qué recuerdo familiar te persigue pero nunca has tenido el coraje de sanar?",
+                "Si tu familia desapareciera mañana, ¿qué te arrepentirías de no haber dicho o hecho?"
+            ],
+            'amigos': [
+                "Nombra tres cosas que eliminarías de tu amigo para que sea 'perfecto'.",
+                "Actividad que más disfrutas con tus amigos.",
+                "¿Te has enojado alguna vez con un amigo? ¿Por qué?",
+                "¿Qué crees que te perdonan tus amigos una y otra vez?",
+                "¿Les has dicho alguna vez a alguno de tus amigos 'te lo dije'?",
+                "Si tuvieras que dar tres características que hace único a tu amigo, ¿cuáles serían?",
+                "¿En qué nunca han estado de acuerdo?",
+                "¿Qué hábito traerías a tu vida de algún amigo?",
+                "Haz una historia de terror usando cuatro palabras.",
+                "Haz una historia romántica usando cuatro palabras.",
+                "¿Qué superpoder poco convencional te gustaría tener?",
+                "¿Qué talento de alguno de tus amigos que están en este grupo te gustaría tener?",
+                "¿Cuál es la cosa más vergonzosa que te ha pasado en público?",
+                "¿Qué crush secreto tuviste que nadie supo?",
+                "¿Cuál es tu guilty pleasure más extraño?",
+                "¿Qué mentira dijiste que se te salió completamente de control?",
+                "¿Cuál es el mensaje más cringe que has enviado a alguien?",
+                "¿Preferirías poder leer mentiras o ser invisible?",
+                "¿Perder tu memoria o que todos tus amigos pierdan sus recuerdos de ti?",
+                "¿Vivir sin música o vivir sin películas/series por el resto de tu vida?",
+                "¿Poder viajar al pasado o al futuro?",
+                "¿Ser famoso pero odiado o desconocido pero amado?",
+                "Cuenta la peor cita o salida que hayas tenido.",
+                "¿Cuál es la mentira más grande que le dijiste a tus padres?",
+                "¿Cuál fue tu momento más rebelde?",
+                "¿Alguna vez te cacharon haciendo algo que no debías?",
+                "¿Cuál es la travesura más loca que hiciste en la escuela?",
+                "¿Qué tendencia o moda actual no entiendes para nada?",
+                "¿Qué película o serie sobrevalorada no te gustó?",
+                "¿En qué momento te diste cuenta de que ya no eras un niño?",
+                "¿Cuál es tu mayor miedo irracional?",
+                "¿Qué es algo que todos piensan de ti pero no es cierto?",
+                "¿Con qué personaje de ficción te identificas más?",
+                "¿En qué apocalipsis crees que tendrías más chances de sobrevivir?",
+                "Si fueras un villano, ¿cuál sería tu plan malvado?",
+                "¿Alguna vez te has arrepentido de una amistad? ¿Por qué?",
+                "¿Qué es lo más raro que has googleado?",
+                "Si pudieras borrar un recuerdo de tu vida, ¿cuál sería?",
+                "¿A cuál de tus amigos le has mentido más y sobre qué?",
+                "¿Qué amigo te está usando y tú lo sabes pero no quieres admitirlo?",
+                "¿De cuál amistad te estás aferrando solo porque tienen 'historia' pero ya no aporta nada?",
+                "¿A qué amigo has traicionado y nunca le pediste perdón?",
+                "¿Qué tan seguido finges estar de acuerdo con tus amigos solo para no quedar fuera del grupo?",
+                "¿Has hablado mal de algún amigo a sus espaldas? ¿Qué dijiste?",
+                "¿Cuál de tus amigos te genera más envidia y por qué no puedes alegrarte genuinamente por ellos?",
+                "¿Qué amigo necesita que le digas una verdad dura pero no tienes el valor?",
+                "¿Cuántos de tus 'amigos' realmente estarían ahí si perdieras todo mañana?",
+                "¿Con cuál de tus amigos eres completamente falso y por qué sigues manteniendo esa amistad?",
+                "¿Qué tanto de tu personalidad cambias dependiendo del grupo de amigos con el que estés?",
+                "Si tus amigos fueran brutalmente honestos contigo, ¿qué defecto tuyo señalarían primero?"
+            ],
+            'pareja': [
+                "Describe tres características de tu pareja que la hacen única.",
+                "¿Cómo suelen resolver los conflictos?",
+                "¿Cuál es la mayor enseñanza que has aprendido de tu pareja?",
+                "Nombra tres cosas que eliminarías de tu pareja para que sea 'perfecta'.",
+                "¿En qué crees que nunca se pondrán de acuerdo?",
+                "¿Qué hábito traerías a tu vida de tu pareja?",
+                "¿Qué película para ver en pareja recomendarías?",
+                "¿Cuáles serían tu top tres de canciones románticas que te han acompañado en la vida?",
+                "Si pudieras viajar a un momento en el pasado para cambiar algo, ¿a qué día volverías?",
+                "¿Qué fue lo primero que pensaste cuando me viste por primera vez?",
+                "¿Cuál fue el momento exacto en que supiste que te gustaba?",
+                "¿Qué es algo sobre mí que te sorprendió descubrir con el tiempo?",
+                "¿Cuál es tu recuerdo favorito de nosotros juntos?",
+                "¿Qué lado mío te hace sentir más enamorado?",
+                "¿Cuándo te sientes más amado por mí?",
+                "¿Hay algo que quieras decirme pero te da miedo o vergüenza?",
+                "¿Cómo prefieres que te demuestre mi amor?",
+                "¿En qué momento te has sentido más vulnerable conmigo?",
+                "¿Qué necesitas de mí cuando estás pasando por un mal momento?",
+                "¿Cómo te imaginas nuestra vida en cinco años?",
+                "¿Qué aventura te gustaría que viviéramos juntos?",
+                "¿Hay algún sueño tuyo en el que quieras que yo participipe?",
+                "¿Qué meta quisieras que lográramos como pareja?",
+                "¿Dónde te gustaría que viviéramos en el futuro?",
+                "¿Qué es algo que podría hacer para que te sientas más apreciado?",
+                "¿Hay algo que yo haga que te moleste pero no me lo has dicho?",
+                "¿Qué aspecto de nuestra relación crees que deberíamos mejorar?",
+                "¿Cómo podemos comunicarnos mejor cuando discutimos?",
+                "¿Qué aprendiste de relaciones pasadas que aplicas con nosotros?",
+                "¿Cuál ha sido nuestro momento más difícil y cómo crees que lo superamos?",
+                "¿Qué valores esperas que siempre compartamos?",
+                "¿Qué te hace sentir seguro en esta relación?",
+                "¿Qué actividad juntos te hace más feliz?",
+                "¿Qué canción o película representa nuestra historia?",
+                "¿Qué locura te gustaría que hiciéramos juntos algún día?",
+                "¿Qué tan seguido finges estar bien cuando en realidad no lo estás?",
+                "¿En qué te estoy fallando que no me has dicho por miedo a herirme?",
+                "¿Cuántas veces has pensado en dejarlo todo pero te quedas por miedo o comodidad?",
+                "¿Qué aspecto de tu ex comparas constantemente conmigo aunque no lo admitas?",
+                "¿Estás realmente enamorado o solo tienes miedo de estar solo?",
+                "¿Qué fantasía sexual tienes que nunca te has atrevido a compartir?",
+                "¿En qué momento de nuestra relación sentiste que cometiste un error pero ya era tarde para echarte atrás?",
+                "¿Qué sacrificio has hecho por esta relación del que te arrepientes en secreto?",
+                "¿Cuánto de ti has perdido por intentar ser lo que tu pareja quiere?",
+                "¿Hay alguien más a quien aún piensas o extrañas?",
+                "¿Qué conversación importante sigues evitando porque sabes que podría terminar la relación?",
+                "¿Estás con la persona correcta en el momento equivocado o viceversa?",
+                "¿Qué parte de tu pareja toleras en lugar de realmente aceptar?",
+                "Si tu pareja nunca cambia nada de lo que te molesta, ¿podrías vivir así para siempre?",
+                "¿Estás construyendo un futuro juntos o solo sobreviviendo el presente?"
+            ],
+            'padre_hijos': [
+                "¿Qué ha sido lo más difícil de ser padre o madre?",
+                "¿Qué momento de la vida de tus padres considerarías para hacer un libro?",
+                "¿Qué es lo que más te ha costado en esta etapa de tu vida, ya sea como padre/madre o como hijo?",
+                "¿Qué momento de la vida/historia familiar fue el más complejo para ti?",
+                "¿Hay algún tema que te cueste hablar con tus hijos?",
+                "¿Hay algún tema que te cueste hablar con tus padres?",
+                "¿Hay algún momento especial donde recuerdes haberte sentido muy orgulloso de tus hijos?",
+                "¿Hay algún momento especial donde recuerdes haberte sentido muy orgulloso de tus padres?",
+                "Si pudieras viajar a un momento en el pasado para cambiar algo, ¿a qué día volverías?",
+                "¿Qué crees que yo no entiendo sobre tu vida diaria?",
+                "¿Qué te gustaría que yo supiera sobre ti que nunca te he preguntado?",
+                "¿Hay algo que hayas aprendido de mí recientemente?",
+                "¿Qué valor familiar es el más importante para ti y por qué?",
+                "¿Qué te preocupa sobre el futuro?",
+                "¿Cuál es un sueño que tienes pero que rara vez compartes?",
+                "¿Hay algo que te dé miedo admitir frente a mí?",
+                "¿Qué te hace sentir más orgulloso en tu vida?",
+                "¿Cómo prefieres que te demuestre mi amor o apoyo?",
+                "¿Hay algo que yo haga que te moleste pero no me lo has dicho?",
+                "¿Qué podríamos hacer juntos que nos ayudaría a estar más unidos?",
+                "¿Cuándo te sientes más escuchado por mí?",
+                "¿Hay algo que quisieras que hiciéramos diferente como familia?",
+                "Si pudieras cambiar algo de cómo nos comunicamos, ¿qué sería?",
+                "¿Qué es algo que admiras de mí?",
+                "¿Hay algo de lo que debería disculparme contigo?",
+                "¿Cómo te gustaría que manejáramos los desacuerdos entre nosotros?",
+                "Si pudieras pedirme una cosa, sin miedo a ser juzgado, ¿qué sería?",
+                "¿En qué te estoy fallando como padre/madre o como hijo/hija que no te atreves a decirme?",
+                "¿Cuántas veces has sentido que te decepcioné pero te callaste?",
+                "¿Qué error mío como padre/madre te marcó más negativamente?",
+                "¿De qué tienes miedo que yo me entere sobre ti?",
+                "¿Cuánto de tu vida me ocultas porque sabes que no lo entendería o aprobaría?",
+                "Padres: ¿En qué aspecto sientes que estás repitiendo los errores de tus padres?",
+                "Hijos: ¿En qué te pareces a tu padre/madre que más odias?",
+                "¿Qué sacrificio hice por ti que nunca has valorado realmente?",
+                "¿Cuántas oportunidades de conectar conmigo has desperdiciado por estar en el celular o 'ocupado'?",
+                "Padres: ¿Cuándo fue la última vez que realmente escuchaste a tu hijo sin pensar en tu respuesta?",
+                "Hijos: ¿Cuándo fue la última vez que les preguntaste a tus padres cómo están de verdad?",
+                "¿Qué conversación importante estamos posponiendo que ambos sabemos que debemos tener?",
+                "¿Qué tanto me conoces realmente versus la imagen que tienes de mí?",
+                "Padres: ¿Estás criando a tus hijos o solo controlándolos?",
+                "Hijos: ¿Cuándo vas a dejar de culpar a tus padres y empezar a tomar responsabilidad de tu vida?",
+                "¿Qué parte de nuestra relación es genuina y qué parte es solo obligación familiar?",
+                "¿Te arrepientes de algo que me dijiste o hiciste pero tu orgullo no te deja disculparte?",
+                "¿Cuánto tiempo más vamos a fingir que todo está bien cuando ambos sabemos que no es así?",
+                "Padres: ¿Qué sueño tuyo sacrificaste por tus hijos del que te arrepientes?",
+                "Hijos: ¿Qué presión de tus padres estás cumpliendo que en realidad no quieres?",
+                "¿Cuándo fue la última vez que nos dijimos algo real y vulnerable sin máscaras?",
+                "¿Qué necesitas perdonarme que aún cargas en tu corazón?",
+                "Si solo te quedaran 30 días conmigo, ¿qué cambiaría en nuestra relación?"
+            ],
+            'colegio': [
+                "Cuando estás triste, ¿qué sueles hacer para que esa emoción sea menos invasiva?",
+                "¿Qué profesor o clase recuerdas con mayor alegría y por qué?",
+                "¿Qué has aprendido este año que crees te ha servido mucho para la vida?",
+                "Si pudieras tener una conversación de una hora con cualquier persona del mundo, ¿quién sería y qué le preguntarías?",
+                "¿Qué habilidad o talento te gustaría desarrollar y por qué?",
+                "¿Cuál es una opinión impopular que tienes y estás dispuesto a defender?",
+                "¿Qué te hace sentir más orgulloso de ti mismo?",
+                "¿Cuál ha sido el mejor consejo que te han dado y quién te lo dio?",
+                "Cuenta sobre un momento en que fallaste en algo pero aprendiste una lección valiosa.",
+                "¿Qué es algo que antes te daba miedo pero ahora ya no?",
+                "¿Cuál ha sido el día más memorable de tu vida hasta ahora?",
+                "¿Qué problema mundial te gustaría ayudar a resolver?",
+                "¿Prefieres tener una vida predecible y segura o una llena de aventuras e incertidumbre?",
+                "¿Qué cualidad valoras más en un amigo?",
+                "¿Crees que las redes sociales nos acercan o nos alejan como sociedad?",
+                "¿Es más importante ser honesto siempre o ser amable siempre? ¿Por qué?",
+                "Si pudieras cambiar una regla de tu escuela, ¿cuál sería y por qué?",
+                "¿Prefieres ser recordado por algo grande que hiciste o por cómo trataste a las personas?",
+                "¿Es mejor arrepentirse de algo que hiciste o de algo que no hiciste?",
+                "Si pudieras vivir en cualquier época histórica por un año, ¿cuál elegirías?",
+                "¿Qué libro, película o serie ha cambiado tu forma de pensar sobre algo?",
+                "Si tu vida fuera una película, ¿de qué género sería?",
+                "¿Qué canción describe mejor cómo te sientes en este momento de tu vida?",
+                "¿Prefieres crear arte o consumirlo? ¿Por qué?",
+                "Si pudieras inventar una materia escolar nueva, ¿cuál sería?",
+                "¿Qué superpoder elegirías si solo pudieras usarlo para ayudar a otros?",
+                "Si pudieras cenar con tres personas, vivas o muertas, ¿quiénes serían?",
+                "¿En qué eres completamente diferente a como eras hace tres años?",
+                "Si tuvieras que dar un consejo a alguien de 12 años, ¿cuál sería?",
+                "¿Cuántas horas al día desperdicias en el celular fingiendo que estás 'descansando'?",
+                "¿Qué calificación refleja realmente tu esfuerzo y cuál es puro cuento?",
+                "¿A cuántos compañeros has juzgado sin conocerlos realmente?",
+                "¿Qué tanto de tu personalidad en el colegio es real y qué tanto es actuación para encajar?",
+                "¿Has permitido que molesten a alguien solo para no ser tú el blanco?",
+                "¿Cuántas oportunidades de aprender has perdido por hacerte el cool o la desinteresada?",
+                "¿Qué profesor te está diciendo la verdad que no quieres escuchar?",
+                "¿Estás estudiando para aprender o solo para aprobar y olvidar?",
+                "¿A quién le debes una disculpa en el colegio pero tu orgullo no te deja hacerlo?",
+                "¿Cuánto potencial estás desperdiciando por miedo al qué dirán?",
+                "¿Has copiado en un examen? ¿A quién realmente engañaste?",
+                "¿Qué grupo o 'tribu' del colegio discriminas aunque no lo admitas?",
+                "¿Cuánto de tu tiempo en el colegio inviertes en drama innecesario?",
+                "¿Qué compañero está pasando por algo difícil y tú lo ignoras completamente?",
+                "¿Estás eligiendo tu futuro o solo siguiendo lo que esperan de ti?",
+                "¿Has participado en chismes que dañaron a alguien? ¿Cómo te sientes al respecto?",
+                "¿Qué oportunidad en el colegio no aprovechaste por flojera que ahora lamentas?",
+                "¿Cuántas clases has perdido mentalmente por estar en tu celular o en las nubes?",
+                "¿Qué versión de ti quieres ser cuando termines el colegio: la que todos esperaban o la real?",
+                "¿Estás haciendo amigos reales o solo acumulando contactos superficiales?",
+                "Si tu vida académica no cambia, ¿dónde estarás en cinco años y te gusta esa respuesta?"
+            ],
+            'desarrollo_personal': [
+                "¿Qué tres características tuyas son de exportación?",
+                "¿Qué aspecto de tu personalidad te ha ayudado positivamente en diferentes momentos de tu vida?",
+                "¿Qué, de lo que haces en la vida, es lo que más te apasiona y por qué?",
+                "¿Casualidad o causalidad?",
+                "¿Eres una persona que reconoce sus errores?",
+                "Tres personas que hayan dejado una huella en tu vida.",
+                "¿Qué tal te va con el manejo de las emociones?",
+                "¿Cómo suele percibirte la gente en una primera impresión?",
+                "¿Cuáles serían los ingredientes que darías en una charla TED para que la gente sea feliz?",
+                "¿Qué película recomendarías para aprender a vivir la vida?",
+                "¿Vaso medio lleno o medio vacío?",
+                "Si tuvieras dinero y tiempo para estudiar algo por puro placer, ¿qué sería?",
+                "Libro a recomendar.",
+                "¿Te consideras más racional o emocional?",
+                "Termina la frase en primera persona: 'Hasta cuándo voy a...'",
+                "¿Quién eres realmente cuando nadie te está mirando?",
+                "¿Qué tres palabras te describen mejor y por qué?",
+                "¿Cuál es tu mayor fortaleza y cómo podrías usarla más?",
+                "¿Qué debilidad tuya te gustaría transformar en fortaleza?",
+                "¿Qué patrón negativo repites en tu vida sin darte cuenta?",
+                "¿Qué te hace sentir más vivo y lleno de energía?",
+                "Si tuvieras seguridad económica garantizada, ¿a qué dedicarías tu tiempo?",
+                "¿Cuál crees que es tu propósito en la vida?",
+                "¿Qué legado te gustaría dejar en este mundo?",
+                "¿Cuál es tu mayor miedo y cómo te limita?",
+                "¿Qué creencia limitante sobre ti mismo necesitas soltar?",
+                "¿Qué te impide ser la mejor versión de ti mismo?",
+                "¿Qué experiencia dolorosa del pasado te ha enseñado más?",
+                "¿A quién necesitas perdonar (incluyéndote a ti mismo) para seguir adelante?",
+                "¿Qué hábito diario te acerca más a tus metas?",
+                "¿Qué hábito destructivo necesitas eliminar?",
+                "¿Cómo sería tu día ideal de principio a fin?",
+                "¿Hay alguna relación tóxica que necesitas terminar o transformar?",
+                "¿Cómo te gustaría que las personas te recordaran?",
+                "¿Qué logro te haría sentir más orgulloso de ti mismo dentro de un año?",
+                "¿Qué habilidad nueva cambiaría tu vida si la desarrollaras?",
+                "¿Cuáles son tus tres valores más importantes y los estás viviendo?",
+                "¿Qué es innegociable para ti en la vida?",
+                "Si hoy fuera tu último día, ¿qué te arrepentirías de no haber hecho o dicho?",
+                "¿Qué versión mejorada de ti estás evitando convertirte en porque requiere trabajo real?",
+                "¿Cuántos libros de autoayuda has leído sin aplicar ni una sola lección?",
+                "¿Qué 'trauma' usas como excusa para no crecer que en realidad ya deberías haber superado?",
+                "¿En qué área de tu vida dices 'no tengo tiempo' cuando en realidad es 'no es prioridad'?",
+                "¿Cuánto dinero has gastado en cursos, coaches o terapia que no has aplicado?",
+                "¿Qué promesa de año nuevo llevas haciendo cinco años seguidos sin cumplir?",
+                "¿Estás trabajando en ti mismo o solo coleccionando herramientas de desarrollo personal?",
+                "¿Qué tanto de tu 'crecimiento personal' es real y qué tanto es contenido para redes sociales?",
+                "¿Cuál es la verdad sobre ti que todos ven pero tú niegas ferozmente?",
+                "¿Estás esperando el momento perfecto para empezar o solo tienes miedo de fracasar?",
+                "¿Qué harías diferente si supieras que tienes exactamente un año más de vida?"
+            ],
+            'doctor_house': [
+                "De 1 a 10, ¿qué tanto te afecta la opinión de los demás?",
+                "Debes elegir un libro, una película y un álbum para llevar al espacio.",
+                "¿Cómo te llevas con la crítica?",
+                "¿Qué le advertirías a tu yo de 15 años?",
+                "¿Un buen sueldo o un buen trabajo? (solo uno)",
+                "Si pudieras elegir un nuevo trabajo, oficio o profesión, ¿cuál sería?",
+                "¿Qué edad te gustaría tener para siempre?",
+                "Si recibieras 10 millones de dólares de una herencia, ¿qué es lo más significativo que harías?",
+                "¿El mejor ataque de risa del último tiempo?",
+                "Has sido elegido senador, y te piden promover tres leyes nuevas, ¿cuáles serían y por qué?",
+                "Cuando no has tenido un buen día, ¿qué sueles hacer?",
+                "¿Qué sueño te queda por cumplir?",
+                "¿Qué personaje y de qué película serías o eres tú?",
+                "¿Última serie o película que te hizo llorar?",
+                "Una característica positiva de los participantes del grupo.",
+                "¿Qué harías en un año sabático?",
+                "¿Qué pérdida recuerdas con especial tristeza?",
+                "¿Cuáles son las tres emociones que más sueles sentir?",
+                "¿Qué te gusta hacer cuando sabes que tendrás tiempo libre?",
+                "¿Qué excusa te estás creyendo ahora mismo que te mantiene exactamente donde no quieres estar?",
+                "Si fueras brutalmente honesto, ¿qué problema en tu vida es completamente tu culpa?",
+                "¿Qué estás fingiendo no saber sobre ti mismo?",
+                "¿De qué te quejas constantemente pero no haces absolutamente nada para cambiar?",
+                "¿Cuál es la mentira más grande que te dices a ti mismo cada día?",
+                "¿En qué área de tu vida te has conformado con ser mediocre?",
+                "¿Qué talento estás desperdiciando por puro miedo o pereza?",
+                "¿A quién sigues permitiendo que te trate como basura y por qué?",
+                "¿Qué relación te está drenando la vida y por qué sigues ahí?",
+                "¿A quién estás usando como muleta emocional en lugar de resolver tus propios problemas?",
+                "¿Con quién estás siendo falso y qué te da tanto miedo de ser auténtico?",
+                "¿Qué no estás haciendo porque te preocupa más lo que piensen los demás que tu propia felicidad?",
+                "¿De qué tienes tanto miedo que prefieres una vida miserable pero 'segura'?",
+                "¿Qué oportunidad dejaste pasar y ahora te arrepientes como cobarde?",
+                "¿Qué harías mañana si supieras que nadie te va a juzgar?",
+                "¿Qué adicción o mal hábito estás minimizando como si no fuera gran cosa?",
+                "¿Cuánto tiempo más vas a culpar a tu infancia, tus padres o tus circunstancias?",
+                "¿Qué problema de salud estás ignorando porque confrontarlo requeriría disciplina?",
+                "¿En qué te estás saboteando justo cuando las cosas empiezan a mejorar?",
+                "¿Qué parte de tu sufrimiento actual disfrutas secretamente porque te da una identidad o atención?",
+                "¿En qué momento dejaste de luchar y decidiste ser una víctima?",
+                "¿Cuántas veces más vas a 'empezar el lunes' antes de admitir que no quieres cambiar?",
+                "¿Qué necesitas escuchar que nadie tiene el valor de decirte?",
+                "¿Cuál es la verdad incómoda sobre ti que todos saben excepto tú?",
+                "¿Qué cambiaría en tu vida si dejaras de ser un cobarde por 30 días?",
+                "¿Cuándo vas a dejar de leer preguntas de desarrollo personal y empezar a hacer algo de verdad?"
+            ]
+        };
+
+        // NOMBRES DE TÓPICOS (AGREGAR DOCTOR HOUSE)
+        const nombresTopicos = {
+            'que': '¿Qué?',
+            'espiritualidad': 'Espiritualidad',
+            'familia': 'Familia', 
+            'amigos': 'Amigos',
+            'pareja': 'Pareja',
+            'padre_hijos': 'Padre/Hijos',
+            'colegio': 'Colegio',
+            'desarrollo_personal': 'Desarrollo Personal',
+            'doctor_house': 'Doctor House'
+        };
+
+        // ✅ CORREGIDO: INICIALIZAR SALA - FLUJO MEJORADO
+        function inicializarSala() {
+            const urlParams = new URLSearchParams(window.location.search);
+            codigoSala = urlParams.get('sala') || '';
+            
+            console.log('🔍 DEBUG - Parámetros URL:', {sala: codigoSala});
+            
+            // Obtener datos de localStorage
+            const salaData = JSON.parse(localStorage.getItem('salaActual') || '{}');
+            console.log('🔍 DEBUG - localStorage:', salaData);
+            
+            miNombre = salaData.miNombre || 'Jugador';
+            esCreador = salaData.esCreador || false;
+
+            // Si no hay sala en URL, usar localStorage
+            if (!codigoSala && salaData.codigo) {
+                codigoSala = salaData.codigo;
+                console.log('🔄 Usando código de localStorage:', codigoSala);
+            }
+
+            if (!codigoSala) {
+                console.error('❌ ERROR: No hay código de sala en URL ni localStorage');
+                alert('Error: No se pudo conectar a la sala. Volviendo al inicio.');
+                window.location.href = 'https://hemirangel-png.github.io/saladejuegos/index.html';
+                return;
+            }
+
+            console.log('✅ Conectando a sala:', codigoSala);
+
+            // ✅ ACTUALIZAR HEADER INMEDIATAMENTE
+            actualizarHeader();
+            
+            // ✅ CORREGIDO: OBTENER TÓPICO DESDE FIREBASE EN LUGAR DE URL
+            obtenerTopicoDesdeFirebase();
+            
+            // Encontrar mi ID de jugador
+            encontrarMiJugadorId();
+        }
+
+        // ✅ ACTUALIZAR HEADER SIMPLIFICADO
+        function actualizarHeader() {
+            const nombreTopico = nombresTopicos[topicoActual] || topicoActual;
+            document.getElementById('topicoTituloHeader').textContent = nombreTopico;
+            document.getElementById('codigoSalaSmall').textContent = codigoSala;
+        }
+
+        // ✅ NUEVA FUNCIÓN: OBTENER TÓPICO DESDE FIREBASE
+        function obtenerTopicoDesdeFirebase() {
+            database.ref('salas/' + codigoSala).once('value')
+                .then(snapshot => {
+                    const sala = snapshot.val();
+                    
+                    if (!sala) {
+                        alert('La sala no existe');
+                        window.location.href = 'https://hemirangel-png.github.io/saladejuegos/index.html';
+                        return;
+                    }
+
+                    // ✅ USAR TÓPICO DESDE FIREBASE (LA FUENTE OFICIAL)
+                    topicoActual = sala.topico || 'que';
+                    console.log('✅ Tópico obtenido desde Firebase:', topicoActual);
+
+                    // Actualizar interfaz
+                    actualizarHeader();
+                    cargarPreguntas();
+                    
+                    // ESCUCHAR CAMBIOS EN LA SALA EN TIEMPO REAL
+                    escucharCambiosSala();
+                    
+                    // ✅ NUEVO: MOSTRAR UNA PREGUNTA INMEDIATA SI NO HAY NINGUNA EN FIREBASE
+                    if (!sala.preguntaActual) {
+                        mostrarPreguntaInicial();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error obteniendo tópico:', error);
+                    alert('Error al conectar con la sala. Volviendo al inicio.');
+                    window.location.href = 'https://hemirangel-png.github.io/saladejuegos/index.html';
+                });
+        }
+
+        // ✅ NUEVA FUNCIÓN: MOSTRAR PREGUNTA INICIAL
+        function mostrarPreguntaInicial() {
+            if (preguntas.length > 0) {
+                const preguntaInicial = preguntas[0];
+                preguntaIndex = 1; // Empezar desde la segunda pregunta
+                
+                // Mostrar en la interfaz
+                document.getElementById('preguntaTexto').textContent = preguntaInicial;
+                
+                // Si somos el creador, guardar en Firebase
+                if (esCreador) {
+                    database.ref('salas/' + codigoSala).update({
+                        preguntaActual: preguntaInicial
+                    });
+                }
+            }
+        }
+
+        // ESCUCHAR CAMBIOS EN LA SALA EN TIEMPO REAL
+        function escucharCambiosSala() {
+            database.ref('salas/' + codigoSala).on('value', (snapshot) => {
+                const sala = snapshot.val();
+                
+                if (!sala) {
+                    alert('La sala ha sido eliminada');
+                    window.location.href = 'https://hemirangel-png.github.io/saladejuegos/index.html';
+                    return;
+                }
+
+                // ✅ ACTUALIZAR TÓPICO POR SI CAMBIA (AUNQUE NO DEBERÍA)
+                if (sala.topico && sala.topico !== topicoActual) {
+                    topicoActual = sala.topico;
+                    actualizarHeader();
+                    cargarPreguntas();
+                }
+
+                // ✅ CORREGIDO: ACTUALIZAR LISTA DE JUGADORES INCLUYENDO AL CREADOR
+                actualizarListaJugadores(sala.jugadores);
+                
+                // ✅ SIEMPRE MOSTRAR PREGUNTA ACTUAL O UNA POR DEFECTO
+                if (sala.preguntaActual) {
+                    document.getElementById('preguntaTexto').textContent = sala.preguntaActual;
+                    
+                    // NUEVO: Guardar pregunta actual en el historial
+                    guardarEnHistorial(sala.preguntaActual);
+                } else if (preguntas.length > 0) {
+                    // Si no hay pregunta en Firebase pero tenemos preguntas cargadas
+                    mostrarPreguntaInicial();
+                }
+
+                // Actualizar estado del juego
+                actualizarEstadoJuego(sala);
+            });
+        }
+
+        // ✅ CORREGIDO: ACTUALIZAR LISTA DE JUGADORES INCLUYENDO AL CREADOR
+        function actualizarListaJugadores(jugadores) {
+            const jugadoresLista = document.getElementById('jugadoresLista');
+            jugadoresLista.innerHTML = '';
+
+            if (!jugadores) {
+                jugadoresLista.innerHTML = '<div class="jugador">No hay jugadores en la sala</div>';
+                return;
+            }
+
+            // Crear un array de jugadores para ordenarlos (creador primero)
+            const jugadoresArray = Object.values(jugadores);
+            const jugadoresIds = Object.keys(jugadores);
+            
+            // Ordenar: creador primero, luego los demás
+            jugadoresArray.sort((a, b) => {
+                if (a.esCreador && !b.esCreador) return -1;
+                if (!a.esCreador && b.esCreador) return 1;
+                return 0;
+            });
+
+            // Mostrar cada jugador
+            jugadoresArray.forEach((jugador, index) => {
+                const jugadorId = jugadoresIds[index];
+                const jugadorElement = document.createElement('div');
+                jugadorElement.className = 'jugador';
+                
+                if (jugador.turno) {
+                    jugadorElement.classList.add('turno-actual');
+                }
+                if (jugador.nombre === miNombre) {
+                    jugadorElement.classList.add('tu');
+                }
+                if (jugador.esCreador) {
+                    jugadorElement.classList.add('creador');
+                }
+
+                jugadorElement.textContent = jugador.nombre;
+                jugadoresLista.appendChild(jugadorElement);
+            });
+        }
+
+        // ACTUALIZAR ESTADO DEL JUEGO
+        function actualizarEstadoJuego(sala) {
+            const btnSiguiente = document.getElementById('btnSiguiente');
+            const btnPreguntasAleatorias = document.getElementById('btnPreguntasAleatorias');
+            const infoTurno = document.getElementById('infoTurno');
+
+            // Verificar si es mi turno
+            const esMiTurno = Object.keys(sala.jugadores || {}).some(jugadorId => 
+                sala.jugadores[jugadorId].nombre === miNombre && sala.jugadores[jugadorId].turno
+            );
+
+            if (esMiTurno) {
+                btnSiguiente.disabled = false;
+                btnPreguntasAleatorias.disabled = false;
+                infoTurno.textContent = "🎯 ¡Es tu turno! Responde la pregunta.";
+                document.getElementById('preguntaContainer').classList.add('highlight');
+            } else {
+                btnSiguiente.disabled = true;
+                btnPreguntasAleatorias.disabled = true;
+                
+                // Encontrar quién tiene el turno
+                const jugadorTurno = Object.values(sala.jugadores || {}).find(j => j.turno);
+                if (jugadorTurno) {
+                    infoTurno.textContent = `⏳ Turno de: ${jugadorTurno.nombre}`;
+                } else if (sala.jugadores && Object.keys(sala.jugadores).length > 0) {
+                    // Si no hay turno asignado pero hay jugadores
+                    infoTurno.textContent = "🎮 Esperando que empiece el juego...";
+                }
+                
+                document.getElementById('preguntaContainer').classList.remove('highlight');
+            }
+
+            // Si el creador puede forzar siguiente turno
+            if (esCreador && !esMiTurno) {
+                btnSiguiente.disabled = false;
+                btnSiguiente.textContent = "🔄 Forzar Siguiente Turno";
+            } else {
+                btnSiguiente.textContent = "🔄 Siguiente Turno";
+            }
+        }
+
+        // ✅ CORREGIDO: ENCONTRAR MI ID DE JUGADOR (MEJOR IMPLEMENTADO)
+        function encontrarMiJugadorId() {
+            database.ref('salas/' + codigoSala + '/jugadores').once('value')
+                .then(snapshot => {
+                    const jugadores = snapshot.val();
+                    if (jugadores) {
+                        Object.keys(jugadores).forEach(jugadorId => {
+                            if (jugadores[jugadorId].nombre === miNombre) {
+                                miJugadorId = jugadorId;
+                                console.log('✅ Mi ID de jugador encontrado:', miJugadorId);
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error encontrando ID de jugador:', error);
+                });
+        }
+
+        // CARGAR PREGUNTAS
+        function cargarPreguntas() {
+            preguntas = bancoPreguntas[topicoActual] || bancoPreguntas.que;
+            preguntas = mezclarArray([...preguntas]);
+            console.log(`✅ Cargadas ${preguntas.length} preguntas para: ${topicoActual}`);
+            
+            // ✅ NUEVO: Mostrar pregunta inmediata si ya cargamos la interfaz
+            if (preguntas.length > 0 && document.getElementById('preguntaTexto').textContent === 'Cargando pregunta...') {
+                const preguntaInicial = preguntas[0];
+                preguntaIndex = 1;
+                document.getElementById('preguntaTexto').textContent = preguntaInicial;
+                
+                // Guardar en historial
+                guardarEnHistorial(preguntaInicial);
+            }
+        }
+
+        // ✅ NUEVA FUNCIÓN: GUARDAR EN HISTORIAL DE PREGUNTAS
+        function guardarEnHistorial(pregunta) {
+            // Evitar duplicados consecutivos
+            if (preguntasAnteriores.length === 0 || preguntasAnteriores[preguntasAnteriores.length - 1] !== pregunta) {
+                preguntasAnteriores.push(pregunta);
+                
+                // Mantener máximo las últimas 10 preguntas
+                if (preguntasAnteriores.length > 10) {
+                    preguntasAnteriores.shift();
+                }
+                
+                // Actualizar estado del botón
+                actualizarEstadoBotonAnterior();
+            }
+            
+            indicePreguntaAnterior = preguntasAnteriores.length - 1;
+        }
+
+        // ✅ NUEVA FUNCIÓN: VER PREGUNTA ANTERIOR
+        function verPreguntaAnterior() {
+            if (preguntasAnteriores.length > 0 && indicePreguntaAnterior > 0) {
+                indicePreguntaAnterior--;
+                const preguntaAnterior = preguntasAnteriores[indicePreguntaAnterior];
+                document.getElementById('preguntaTexto').textContent = preguntaAnterior;
+                
+                // Actualizar estado del botón
+                actualizarEstadoBotonAnterior();
+            }
+        }
+
+        // ✅ NUEVA FUNCIÓN: ACTUALIZAR ESTADO DEL BOTÓN ANTERIOR
+        function actualizarEstadoBotonAnterior() {
+            const btnAnterior = document.getElementById('btnPreguntaAnterior');
+            
+            if (indicePreguntaAnterior > 0) {
+                btnAnterior.disabled = false;
+                // Mostrar cuántas preguntas atrás
+                const preguntasAtras = indicePreguntaAnterior;
+                btnAnterior.innerHTML = `↩️ Ver pregunta anterior (${preguntasAtras} atrás)`;
+            } else {
+                btnAnterior.disabled = true;
+                btnAnterior.innerHTML = `↩️ Ver pregunta anterior`;
+            }
+        }
+
+        // ✅ NUEVA FUNCIÓN: COPIAR CÓDIGO DESDE HEADER
+        function copiarCodigoSala() {
+            navigator.clipboard.writeText(codigoSala).then(() => {
+                const btnCopiar = document.getElementById('btnCopiarHeader');
+                const textoOriginal = btnCopiar.innerHTML;
+                btnCopiar.innerHTML = '✅ Copiado!';
+                btnCopiar.classList.add('copiado');
+                
+                setTimeout(() => {
+                    btnCopiar.innerHTML = textoOriginal;
+                    btnCopiar.classList.remove('copiado');
+                }, 2000);
+            }).catch(err => {
+                alert('Error al copiar el código: ' + err);
+            });
+        }
+
+        // ✅ CORREGIDO: COMPARTIR SALA DESDE HEADER - SOLO UN ENLACE
+        function compartirSalaDesdeHeader() {
+            const nombreTopico = nombresTopicos[topicoActual] || topicoActual;
+            const texto = `¡Únete a mi sala "${nombreTopico}" de Preguntas con Sentido! 🎮\n\nEntra directo aquí: https://hemirangel-png.github.io/saladejuegos/unirse.html?codigo=${codigoSala}`;
+            
+            if (navigator.share) {
+                // Compartir nativo (dispositivos móviles)
+                navigator.share({
+                    title: `Preguntas con Sentido - Sala ${nombreTopico}`,
+                    text: texto,
+                    url: `https://hemirangel-png.github.io/saladejuegos/unirse.html?codigo=${codigoSala}`
+                }).catch(err => {
+                    console.log('Error al compartir:', err);
+                    copiarEnlaceParaCompartir(texto);
+                });
+            } else {
+                // Fallback para escritorio
+                copiarEnlaceParaCompartir(texto);
+            }
+        }
+
+        function copiarEnlaceParaCompartir(texto) {
+            navigator.clipboard.writeText(texto).then(() => {
+                alert('✅ Enlace copiado al portapapeles. ¡Pégalo en tus redes sociales!');
+            }).catch(err => {
+                // Fallback final
+                const textArea = document.createElement('textarea');
+                textArea.value = texto;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('✅ Enlace copiado al portapapeles. ¡Pégalo en tus redes sociales!');
+            });
+        }
+
+        // ✅ CORREGIDO: SIGUIENTE TURNO QUE ELIMINA JUGADORES FANTASMA
+        function siguienteTurno() {
+            database.ref('salas/' + codigoSala).once('value')
+                .then(snapshot => {
+                    const sala = snapshot.val();
+                    const jugadores = Object.values(sala.jugadores || {});
+                    const jugadoresIds = Object.keys(sala.jugadores || {});
+                    
+                    if (jugadores.length === 0) return;
+
+                    // Encontrar jugador actual
+                    const turnoActualIndex = jugadores.findIndex(j => j.turno);
+                    let siguienteIndex = (turnoActualIndex + 1) % jugadores.length;
+
+                    // Obtener siguiente pregunta
+                    if (preguntaIndex >= preguntas.length) {
+                        preguntaIndex = 0;
+                        preguntas = mezclarArray([...preguntas]);
+                    }
+                    const siguientePregunta = preguntas[preguntaIndex];
+                    preguntaIndex++;
+
+                    // Actualizar turnos y pregunta
+                    const updates = {};
+                    jugadoresIds.forEach((jugadorId, index) => {
+                        updates[`jugadores/${jugadorId}/turno`] = (index === siguienteIndex);
+                    });
+                    updates['preguntaActual'] = siguientePregunta;
+                    updates['estado'] = 'jugando';
+
+                    return database.ref('salas/' + codigoSala).update(updates);
+                })
+                .catch(error => {
+                    console.error('Error en siguiente turno:', error);
+                });
+        }
+
+        // LANZAR DADO - MODIFICADO: Cambiado nombre pero misma función
+        function lanzarDado() {
+            const btnAleatorio = document.getElementById('btnPreguntasAleatorias');
+            btnAleatorio.classList.add('dice-pulse');
+            
+            // Mezclar preguntas
+            preguntas = mezclarArray([...preguntas]);
+            preguntaIndex = 0;
+            
+            // Obtener nueva pregunta aleatoria
+            const nuevaPregunta = preguntas[0];
+            preguntaIndex++;
+
+            // Actualizar en Firebase
+            database.ref('salas/' + codigoSala).update({
+                preguntaActual: nuevaPregunta
+            });
+
+            setTimeout(() => {
+                btnAleatorio.classList.remove('dice-pulse');
+            }, 400);
+        }
+
+        // ✅ CORREGIDO: SALIR DE SALA - SIN AVISO, SALIDA DIRECTA
+        function salirDeSala() {
+            // Sin confirmación, salir directamente
+            if (miJugadorId) {
+                database.ref('salas/' + codigoSala).once('value')
+                    .then(snapshot => {
+                        const sala = snapshot.val();
+                        const jugadores = sala.jugadores;
+                        const jugadoresIds = Object.keys(jugadores);
+                        
+                        // ✅ SI SOY EL CREADOR Y HAY MÁS JUGADORES
+                        if (esCreador && jugadoresIds.length > 1) {
+                            // Encontrar siguiente jugador para transferir creación
+                            const jugadoresArray = Object.values(jugadores);
+                            const siguienteJugadorIndex = (jugadoresArray.findIndex(j => j.nombre === miNombre) + 1) % jugadoresArray.length;
+                            const siguienteJugadorId = jugadoresIds[siguienteJugadorIndex];
+                            
+                            const updates = {};
+                            updates[`jugadores/${siguienteJugadorId}/esCreador`] = true;
+                            updates[`jugadores/${miJugadorId}`] = null; // ✅ ELIMINACIÓN COMPLETA
+                            
+                            // ✅ SI EL JUGADOR ELIMINADO TENÍA EL TURNO, PASAR AL SIGUIENTE
+                            if (jugadores[miJugadorId].turno) {
+                                const nuevoTurnoIndex = (siguienteJugadorIndex + 1) % jugadoresArray.length;
+                                const nuevoTurnoId = jugadoresIds[nuevoTurnoIndex];
+                                updates[`jugadores/${nuevoTurnoId}/turno`] = true;
+                            }
+                            
+                            return database.ref('salas/' + codigoSala).update(updates);
+                        } 
+                        // ✅ SI SOY EL ÚLTIMO JUGADOR
+                        else if (jugadoresIds.length === 1) {
+                            // Eliminar toda la sala
+                            return database.ref('salas/' + codigoSala).remove();
+                        }
+                        // ✅ SI SOY JUGADOR NORMAL
+                        else {
+                            // ✅ ELIMINACIÓN COMPLETA
+                            const updates = {};
+                            updates[`jugadores/${miJugadorId}`] = null;
+                            
+                            // ✅ SI TENÍA EL TURNO, PASAR AL SIGUIENTE
+                            if (jugadores[miJugadorId].turno) {
+                                const jugadoresArray = Object.values(jugadores);
+                                const miIndex = jugadoresArray.findIndex(j => j.nombre === miNombre);
+                                const siguienteIndex = (miIndex + 1) % jugadoresArray.length;
+                                const siguienteJugadorId = jugadoresIds[siguienteIndex];
+                                updates[`jugadores/${siguienteJugadorId}/turno`] = true;
+                            }
+                            
+                            return database.ref('salas/' + codigoSala).update(updates);
+                        }
+                    })
+                    .then(() => {
+                        localStorage.removeItem('salaActual');
+                        window.location.href = 'https://hemirangel-png.github.io/saladejuegos/index.html';
+                    })
+                    .catch(error => {
+                        console.error('Error saliendo de sala:', error);
+                        // Aún así redirigir al index
+                        localStorage.removeItem('salaActual');
+                        window.location.href = 'https://hemirangel-png.github.io/saladejuegos/index.html';
+                    });
+            } else {
+                localStorage.removeItem('salaActual');
+                window.location.href = 'https://hemirangel-png.github.io/saladejuegos/index.html';
+            }
+        }
+
+        // MEZCLAR ARRAY
+        function mezclarArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // INICIALIZAR AL CARGAR
+        document.addEventListener('DOMContentLoaded', inicializarSala);
+
+        // TECLAS RÁPIDAS - MODIFICADO
+        document.addEventListener('keydown', function(e) {
+            const btnSiguiente = document.getElementById('btnSiguiente');
+            const btnAleatorio = document.getElementById('btnPreguntasAleatorias');
+            const btnAnterior = document.getElementById('btnPreguntaAnterior');
+            
+            if ((e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') && !btnSiguiente.disabled) {
+                siguienteTurno();
+            } else if ((e.key === 'd' || e.key === 'D' || e.key === 'a' || e.key === 'A') && !btnAleatorio.disabled) {
+                lanzarDado();
+            } else if ((e.key === 'ArrowLeft' || e.key === 'p' || e.key === 'P') && !btnAnterior.disabled) {
+                verPreguntaAnterior();
+            } else if (e.key === 'Escape') {
+                salirDeSala(); // Ahora también sin confirmación con Escape
+            }
+        });
+
+        // AL CERRAR LA PÁGINA
+        window.addEventListener('beforeunload', function() {
+            if (miJugadorId) {
+                // ✅ ELIMINACIÓN COMPLETA AL CERRAR PÁGINA
+                database.ref('salas/' + codigoSala + '/jugadores/' + miJugadorId).remove();
+            }
+        });
+    </script>
+</body>
+</html>
